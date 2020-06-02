@@ -10,8 +10,8 @@ The Production Ready Automation package from Cumulus Networks provides several e
 
 - A standard reference topology for all examples
 - A variety of golden standard EVPN-VXLAN architecture reference configurations
-- A full Vagrant and libvirt simulation of the Cumulus Networks reference topology (cldemo2) that provides the foundational physical infrastructure and bootstrap configuration to support and demonstrate Cumulus Linux features and technologies
-- Best practice Ansible automation and infrastructure as code (IaC)
+- A full Vagrant and libvirt simulation of the Cumulus Networks reference topology ({{<exlink url="https://gitlab.com/cumulus-consulting/goldenturtle/cldemo2/" text="cldemo2" >}}) that provides the foundational physical infrastructure and bootstrap configuration to support and demonstrate Cumulus Linux features and technologies
+- Best practice {{<exlink url="https://www.ansible.com/" text="Ansible" >}} automation and infrastructure as code (IaC)
 - Working examples of Continuous Integration and Continuous Deployment (CI/CD) using GitLab
 - CI/CD testing powered by NetQ Cloud
 
@@ -34,7 +34,7 @@ The Cumulus Networks reference topology provides a complete two-tier spine and l
 
 {{<img src="/images/guides/cldemo2-diagram.png" >}}
 
-When you start the reference topology simulation environment, all interfaces (except for the out-of-band management network) are unconfigured and administratively down. The golden standard configurations and demos provide interface and routing protocol configurations that are applied to this simulation topology.
+When you start the reference topology simulation environment, all interfaces (except for the out-of-band management network) are unconfigured and administratively down. This is the default configuration of Cumulus Linux. The golden standard configurations and demos provide interface and routing protocol configurations that are applied to this simulation topology.
 
 The Cumulus Networks reference topology is included with every officially-supported Cumulus Linux demo. To see a full example of the Production Ready Automation, use one of the {{<link text="EVPN-VXLAN golden standard demos" title="#golden standard demos" >}}.
 
@@ -42,7 +42,7 @@ The Cumulus Networks reference topology is included with every officially-suppor
 
 ## Golden Standard Demos
 
-Cumulus Networks currently provides three officially-supported demo solutions to overlay and provision the reference topology. These demos are EVPN-VXLAN environments and each performs tenant routing in a different style.
+Cumulus Networks currently provides three officially-supported demo solutions to overlay and provision the reference topology. These demos are all EVPN-VXLAN environments and each performs tenant routing in a different style.
 
 The golden standard demos and the underlying base reference topology are officially hosted on GitLab in the Golden Turtle folder of the {{<exlink url="https://gitlab.com/cumulus-consulting/goldenturtle" text="Cumulus Consulting GitLab group">}}.
 
@@ -61,6 +61,8 @@ For more detailed information about IP addressing and included features, refer t
 ## Infrastructure as Code
 
 The Production Ready Automation package contains examples of best practice Ansible automation and infrastructure as code (IaC). A completely stock Ansible core installation is used without any vendor specific or third-party plugins. Examples of Ansible best practices using roles, highly granular templates, and structured variables represent how you can store your network configurations as a highly scalable version of infrastructure as code. It is that base code that is rendered by the automation engine to produce the final configurations that exist on the network devices.
+
+Ansible is the network automation tool used for network automation by Cumulus Networks due to its wide adoption within the networking industry. Although all examples are fully built with Ansible there is no reason why another automation tool like {{<exlink url="https://www.saltstack.com/" text="Saltstack" >}} could not use these configurations as a reference implementation. 
 
 ## Continuous Integration and Continuous Deployment
 
