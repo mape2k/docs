@@ -19,15 +19,23 @@ You can use this Production Ready Automation package as a learning resource and 
 
 ## Defining Production Ready
 
-Cumulus Networks has purposefully defined these published configurations, automations and integrations as "Production Ready" to reflect the fact that they are actively deployed in the production networks of dozens of Cumulus customers. All of the components contained within the Production Ready Automation are used as the starting point for all paid {{<exlink url="https://cumulusnetworks.com/products/consulting/" text="Cumulus Services" >}} engagements. Any modifications or learnings from those customer engagements are committed back into the PRA repositories.
+Cumulus Networks has purposefully defined these published configurations, automations and integrations as "Production Ready" to reflect the fact that they are actively deployed in the production networks of dozens of Cumulus customers. All of the components contained within the Production Ready Automation are used as the starting point for all paid {{<exlink url="https://cumulusnetworks.com/products/consulting/" text="Cumulus Services" >}} engagements. Any modifications or learnings from those customer engagements are committed back into the PRA repositories. The PRA repositories always reflect the current best practices for datacenter automation and configuration.
 
 ## The Value of Production Ready Automation
 
 Cumulus created the Production Ready Automation to assist customers anywhere they are on the Cumulus Linux automation and deployment journey. Any or all of the PRA content can be used directly against a new or existing datacenter deployment or can be used as a best practice implementation.
 
-We see a vast majority of our customers deploying EVPN-VXLAN networks along with common features including DNS, SNMP, Syslog, NetQ and NTP. This list will grow over time as we build identify more common deployments and best practices.
+We see a vast majority of our customers deploying EVPN-VXLAN networks along with common features including DNS, SNMP, Syslog, NetQ and NTP. This list will grow over time as we identify more common deployments and best practices.
 
-Not only do the PRA collections include full Ansible configurations for these features, but it also includes {{<exlink url="https://docs.cumulusnetworks.com/cumulus-linux/Installation-Management/Zero-Touch-Provisioning-ZTP/" text="ZTP scripts" >}}, high-fidelity simulation with Vagrant and Cumulus Vx and a full automated network testing and validation suite.
+Not only do the PRA collections include full Ansible configurations for these features, but it also includes {{<exlink url="https://docs.cumulusnetworks.com/cumulus-linux/Installation-Management/Zero-Touch-Provisioning-ZTP/" text="ZTP scripts" >}}, high-fidelity simulation with Vagrant and Cumulus Vx and a fully automated network testing and validation suite.
+
+All of this is stored in a Git repository allowing for a modern infrastructure as code definition.
+
+## Infrastructure as Code
+
+The Production Ready Automation package contains examples of best practice Ansible automation and infrastructure as code. A completely stock Ansible core installation is used without any vendor specific or third-party plugins. Examples of Ansible best practices using roles, highly granular templates, and structured variables represent how you can store your network configurations as a highly scalable version of infrastructure as code. It is that base code that is rendered by the automation engine to produce the final configurations that exist on the network devices.
+
+Adopting infrastructure as code allows for offline backups, simple collaboration and easy revision control. The configuration and automation stored within Git are the definitive source of truth for the infrastructure. 
 
 ## Production Ready Automation Components
 
@@ -35,23 +43,23 @@ A number of specific tooling choices were made as part of building PRA. These ch
 
 ### Automation with Ansible
 
-Ansible was selected as the automation tool of choice due to its growing adoption by the broader networking community. Ansible as an organzation has also put significant weight behind embracing network automation. Ansible's agentless nature allows it to work well with legacy networking devices as well as modern networking systems like Cumulus Linux.
+Ansible was selected as the automation tool of choice due to its growing adoption by the broader networking community. Ansible as an organization has also put significant weight behind embracing network automation. Ansible's agentless nature allows it to work well with legacy networking devices as well as modern networking systems like Cumulus Linux.
 
-Although Cumulus Linux does not rely on any networking specific Ansible modules and instead uses the off the shelf Linux server modules, Ansible has been the easiset for network engineers to learn and fits well with a network engineer's (push) model of configuration management.
+Although Cumulus Linux does not rely on any networking specific Ansible modules and instead uses the off the shelf Linux server modules, Ansible has been the easiest for network engineers to learn and fits well with a network engineer's (push) model of configuration management.
 
-We have seen a growing adoption of {{<exlink url="https://www.saltstack.com/" text="Saltstack" >}} due to its ability to have both an agentless push-based model as well as an on-box agent based pull model, we still see a vast majority of our customers adopting and satisified with Ansible.
+We have seen a growing adoption of {{<exlink url="https://www.saltstack.com/" text="Saltstack" >}} due to its ability to have both an agentless push-based model as well as an on-box agent based pull model, we still see a vast majority of our customers adopting and satisfied with Ansible.
 
 ### Network Simulation with Vagrant, KVM and Libvirt
 
-A number of different virtualization options, both free and commerical, exist in the marketplace today. We have found that only KVM and Libvirt meet the needs of multiple VMs with a large number of interfaces (up-to 128 per-VM) as well as the ability to transparently cluster simulations across servers. This allows us to simulate a network of any size, regardless of the power of any single server.
+A number of different virtualization options, both free and commercial, exist in the marketplace today. We have found that only KVM and Libvirt meet the needs of multiple VMs with a large number of interfaces (up-to 128 per-VM) as well as the ability to transparently cluster simulations across servers. This allows us to simulate a network of any size, regardless of the power of any single server.
 
-The use of Vagrant allows us to define the VM settings, such as memory, CPU and binary image, as well as the complex network connectivity of the VMs as code. This allows us to easily share the these lab definitions in the form of a Vagrantfile as well as to version control with Git.
+The use of Vagrant allows us to define the VM settings, such as memory, CPU and binary image, as well as the complex network connectivity of the VMs as code. This allows us to easily share the lab definitions in the form of a Vagrantfile as well as to version control with Git.
 
 ### GitLab Source Code Control
 
 There are two major, public, source code repositories: GitHub and GitLab. We selected GitLab based on their CI/CD framework. GitLab relies on a "GitLab Runner", an agent that runs on a server that will run your CI tests. Our network simulation must run in VMs and not inside of containers, due to the need for a specific VM image (Cumulus VX) and multiple interconnected interfaces. Most "build" tools like {{<exlink url="https://travis-ci.com/" text="Travis-CI" >}} rely on stand alone Docker containers to test software. Our needs are more complex than a third-party build tool can support.
 
-We run the GitLab Runner on servers pre-installed with KVM, libvirt and Vagrant and are dedicated to network simulations. When changes are made to our GitLab source code repository GitLab will notify the Runner agent and trigger the creation of a network simulation and run the associated network tests. The other advantage to using the GitLab Runner is that it operates on a pull model, where the Runner will reach outbound from the server and check with GitLab to see if there are any jobs to run. This is in contrast to {{<exlink url="https://www.jenkins.io/" text="Jenkins" >}} which is triggered based on inbound webhooks. This creates challenges in enterprise environments where inbound HTTP requests may not be allowed due to NAT or firewall policies. There are no technical limiations in using Jenkins as a build server. 
+We run the GitLab Runner on servers pre-installed with KVM, libvirt and Vagrant and are dedicated to network simulations. When changes are made to our GitLab source code repository GitLab will notify the Runner agent and trigger the creation of a network simulation and run the associated network tests. The other advantage to using the GitLab Runner is that it operates on a pull model, where the Runner will reach outbound from the server and check with GitLab to see if there are any jobs to run. This is in contrast to {{<exlink url="https://www.jenkins.io/" text="Jenkins" >}} which is triggered based on inbound webhooks. This creates challenges in enterprise environments where inbound HTTP requests may not be allowed due to NAT or firewall policies. There are no technical limitations in using Jenkins as a build server.
 
 ### Reference Topology
 
@@ -74,6 +82,8 @@ When you start the reference topology simulation environment, all interfaces (ex
 
 The Cumulus Networks reference topology is included with every officially-supported Cumulus Linux demo. To see a full example of the Production Ready Automation, use one of the {{<link text="EVPN-VXLAN golden standard demos" title="#golden standard demos" >}}.
 
+Although your datacenter topology may be different, all of the concepts and principles described in the PRA automations stay the same. More details on how to customize PRA are described in the {{<link title="Customize Production Ready Automation" text="Customizing Production Ready Automation">}} section.
+
 <!-- For information on how to build a package like this, or contribute your own demo or environment for the base Cumulus Networks reference topology, refer to the Contributors Guide.-->
 
 ## Golden Standard Demos
@@ -92,13 +102,13 @@ The name *Golden Turtle* comes from the idea of a *golden reference* and the roc
 - {{<exlink url="https://gitlab.com/cumulus-consulting/goldenturtle/dc_configs_vxlan_evpncent" text="EVPN Centralized Routing">}} is an EVPN-VXLAN environment with a layer 2 extension between tenants with inter-tenant routing on a centralized (fw) device.
 - {{<exlink url="https://gitlab.com/cumulus-consulting/goldenturtle/dc_configs_vxlan_evpnsym" text="EVPN Symmetric Mode">}} is an EVPN-VXLAN environment with a layer 2 extension, layer 3 VXLAN routing, and VRFs for multi-tenancy.
 
+{{%notice tip%}}
+
+To take a *quick* look at a Cumulus Networks golden standard demo, use our simulation platform, Cumulus in the Cloud. The simulation platform has no system requirements or dependencies. Visit {{<exlink url="https://cumulusnetworks.com/products/cumulus-in-the-cloud/" text="Cumulus in the Cloud">}} to get a full blank slate Cumulus Networks reference topology. You can deploy any of the golden standard demos right from the UI with one click.
+
+{{%/notice%}}
+
 For more detailed information about IP addressing and included features, refer to the {{<exlink url="https://gitlab.com/cumulus-consulting/goldenturtle" text="README">}} page of the demo.
-
-## Infrastructure as Code
-
-The Production Ready Automation package contains examples of best practice Ansible automation and infrastructure as code (IaC). A completely stock Ansible core installation is used without any vendor specific or third-party plugins. Examples of Ansible best practices using roles, highly granular templates, and structured variables represent how you can store your network configurations as a highly scalable version of infrastructure as code. It is that base code that is rendered by the automation engine to produce the final configurations that exist on the network devices.
-
-Ansible is the network automation tool used for network automation by Cumulus Networks due to its wide adoption within the networking industry. Although all examples are fully built with Ansible there is no reason why another automation tool like {{<exlink url="https://www.saltstack.com/" text="Saltstack" >}} could not use these configurations as a reference implementation. 
 
 ## Continuous Integration and Continuous Deployment
 
