@@ -29,7 +29,9 @@ The following procedue describes the easiest way to start a Production Ready aut
 - Runs a series of `vagrant up` commands to bring up the rest of the network simulation.
 - Runs the `vagrant scp` command to copy the network automation into the simulation.
 
+{{< notice note>}}
 To control which nodes start and in which order, and to save CPU and memory resources, you can run the simulation manually. Refer to {{<link text="Run the Production Ready Automation" title="Run Production Ready Automation" >}}.
+{{< /notice >}}
 
 To start a golden standard demo topology using a bash script:
 
