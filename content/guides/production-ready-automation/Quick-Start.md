@@ -9,7 +9,7 @@ draft: true
 There are two ways to get started:
 
 - Using {{<exlink url="https://cumulusnetworks.com/products/cumulus-in-the-cloud/" text="Cumulus in the Cloud">}} to try directly on Cumulus infrastructure.
-- Using your own Vagrant, libvirt and KVM server. This requires a minimum of 15GB of ram with a prefered 24GB of RAM for the demo environment.
+- Using your own Vagrant, libvirt and KVM server. This requires a minimum of 15GB of ram with a preferred 24GB of RAM for the demo environment.
 
 ## Using Cumulus in the Cloud 
 
@@ -45,7 +45,7 @@ The default Cumulus Linux username and password of username `cumulus` and passwo
 
 You can scroll down to the "Services" pane and see the `ssh oob-mgmt-server` service. The link will launch an SSH session. If this link fails you can ssh to `air.cumulusnetworks.com` using the port defined in "External Port".
 
-5. (Optional) From the `/home/cumulus` directory on the oob-mgmt-server you will see a folder name matching the repo of the demo you selected, for example `dc_configs_vxlan_evpnsym`. These are directly cloned from the {{<exlink url="https://gitlab.com/cumulus-consulting/goldenturtle" text="Golden Turtle" >}} repository.
+5. (Optional) From the `/home/cumulus` directory on the oob-mgmt-server you will see a folder name matching the repo of the demo you selected, for example, `dc_configs_vxlan_evpnsym`. These are directly cloned from the {{<exlink url="https://gitlab.com/cumulus-consulting/goldenturtle" text="Golden Turtle" >}} repository.
 
 ## Using Vagrant and Libvirt
 
@@ -57,7 +57,7 @@ More information on the minimum requirements and tested software versions can be
 
 ### Start a Golden Standard Demo Topology
 
-The following procedue describes the easiest way to start a Production Ready automation demo using a bash script provided in the package. The bash script performs the following steps automatically:
+The following procedure describes the easiest way to start a Production Ready automation demo using a bash script provided in the package. The bash script performs the following steps automatically:
 
 - Checks if the Cumulus Networks reference topology submodule is present and attempts to download the reference topology if it is not present.
 - Runs the `vagrant up` command for the out-of-band management network devices.
@@ -65,7 +65,7 @@ The following procedue describes the easiest way to start a Production Ready aut
 - Runs the `vagrant scp` command to copy the network automation into the simulation.
 
 {{< notice note>}}
-The order in which devices are started is critical to proper functioning of the lab environment. If the oob-server and oob-switch are not online before the network, out of band management network DHCP will fail.
+The order in which devices are started is critical to the proper functioning of the lab environment. If the oob-server and oob-switch are not online before the network, out of band management network DHCP will fail.
 
 To control which nodes start and in which order, and to save CPU and memory resources, you can run the simulation manually. Refer to {{<link text="Run the Production Ready Automation" title="Run Production Ready Automation" >}}.
 {{< /notice >}}
@@ -103,11 +103,11 @@ To start a golden standard demo topology using a bash script:
     user@host:~/dc_configs_vxlan_evpnsym#
     ```
 
-4. Run the `start-demo.sh` script. If you do not intent to use NetQ, add the `--no-netq` option.
+4. Run the `start-demo.sh` script. If you do not intend to use NetQ, add the `--no-netq` option.
 
 {{%notice note%}}
 
-An Ubuntu 18.04LTS box with additional CPU and memory resources for installing NetQ is included in the out-of-band management network of the base Cumulus Networks reference topology. NetQ is *not* a required element for any of the golden standard demos to function but is used in the topology to power CI/CD testing, and to preview and test the NetQ functionality. If you do not intent to use NetQ, Cumulus Networks recommends that you do not start it in simulation to save an additional 8GB of memory.
+An Ubuntu 18.04LTS box with additional CPU and memory resources for installing NetQ is included in the out-of-band management network of the base Cumulus Networks reference topology. NetQ is *not* a required element for any of the golden standard demos to function but is used in the topology to power CI/CD testing, and to preview and test the NetQ functionality. If you do not intend to use NetQ, Cumulus Networks recommends that you do not start it in simulation to save an additional 8GB of memory.
 
 {{%/notice%}}
 
@@ -216,7 +216,7 @@ You can start the reference topology by itself if you want to build configuratio
     user@host:~/cldemo2#
     ```  
 
-3. Run the `start-blank-topology.sh` script to launch the simulation. If you do not intent to use NetQ, add the `--no-netq` option.
+3. Run the `start-blank-topology.sh` script to launch the simulation. If you do not intend to use NetQ, add the `--no-netq` option.
 
     ```
     user@host:~/cldemo2# ./start-blank-topology.sh --no-netq
