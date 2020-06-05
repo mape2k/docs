@@ -6,21 +6,56 @@ product: Cumulus Networks Guides
 version: "1.0"
 draft: true
 ---
-This quick start provides a quick and easy way to run your own Vagrant, libvirt, and KVM server, with procedures on how to:
+There are two ways to get started:
 
-- Start a golden standard demo topology using a bash script
-- Start the blank Cumulus Networks reference topology if you are looking to build configuration from scratch
-- Destroy and end a simulation
+- Using {{<exlink url="https://cumulusnetworks.com/products/cumulus-in-the-cloud/" text="Cumulus in the Cloud">}} to try directly on Cumulus infrastructure.
+- Using your own Vagrant, libvirt and KVM server. This requires a minimum of 15GB of ram with a prefered 24GB of RAM for the demo environment.
 
-To run a full reference topology *without* NetQ, you need 15104MB of memory. If you intend to run NetQ, you need 23296MB of memory. For complete sytem reqirements, refer to {{<link text="Run the Production Ready Automation" title="Run Production Ready Automation" >}}.
+## Using Cumulus in the Cloud 
 
-{{%notice tip%}}
+### Request a demo environment
 
-To take a *quick* look at a Cumulus Networks golden standard demo, use our simulation platform, Cumulus in the Cloud. The simulation platform has no system requirements or dependencies. Visit {{<exlink url="https://cumulusnetworks.com/products/cumulus-in-the-cloud/" text="Cumulus in the Cloud">}} to get a full blank slate Cumulus Networks reference topology. You can deploy any of the golden standard demos right from the UI with one click.
+1. Visit {{<exlink url="https://cumulusnetworks.com/products/cumulus-in-the-cloud/" text="Cumulus in the Cloud">}} and click "Build a Simulation".
 
+{{%notice note%}}
+You do not have to be a current Cumulus Networks customer to use Cumulus in the Cloud, but you do need to register for a cumulusnetworks.com account to start a simulation. 
 {{%/notice%}}
 
-## Start a Golden Standard Demo Topology
+It will take just a few minutes to launch the simulation. You will receive an email with a link to your lab when it is ready.
+
+2. Once the lab launches, on the left-side navigation, the "Select a demo" menu will have the choice of PRA demos to run.
+
+{{<img src="/images/guides/citc-choose-demo.png">}}
+
+Select your demo and click "Run Now". This will fully provision the demo environment.
+
+{{<img src="/images/guides/citc-run-demo.gif">}}
+
+3. When the lab is provisioned you can click directly on a device to access the console, login and run commands.
+
+{{<img src="/images/guides/citc-access-console.gif">}}
+
+{{% notice tip %}}
+The default Cumulus Linux username and password of username `cumulus` and password `CumulusLinux!` is used on all devices in the lab.
+{{% /notice %}}
+
+4. (Optional) If you wish to see or modify any playbooks in the lab, access the oob-mgmt-server through the CITC "Advanced" button on the left navigation bar. This will provide you with information on how to SSH to the oob-mgmt-server.
+
+{{<img src="/images/guides/citc-oob-ssh.gif">}}
+
+You can scroll down to the "Services" pane and see the `ssh oob-mgmt-server` service. The link will launch an SSH session. If this link fails you can ssh to `air.cumulusnetworks.com` using the port defined in "External Port".
+
+5. (Optional) From the `/home/cumulus` directory on the oob-mgmt-server you will see a folder name matching the repo of the demo you selected, for example `dc_configs_vxlan_evpnsym`. These are directly cloned from the {{<exlink url="https://gitlab.com/cumulus-consulting/goldenturtle" text="Golden Turtle" >}} repository.
+
+## Using Vagrant and Libvirt
+
+{{% notice tip %}}
+The full {{<exlink url="https://gitlab.com/cumulus-consulting/goldenturtle/cldemo2/" text="cldemo2" >}} topology requires a minimum of **2.4 GB** of RAM. Without NetQ it requires a minimum of **1.6 GB** of RAM.
+
+More information on the minimum requirements and tested software versions can be found in the {{<link title="Run Production Ready Automation" text="User Guide" >}}
+{{% /notice %}}
+
+### Start a Golden Standard Demo Topology
 
 The following procedue describes the easiest way to start a Production Ready automation demo using a bash script provided in the package. The bash script performs the following steps automatically:
 
@@ -30,6 +65,8 @@ The following procedue describes the easiest way to start a Production Ready aut
 - Runs the `vagrant scp` command to copy the network automation into the simulation.
 
 {{< notice note>}}
+The order in which devices are started is critical to proper functioning of the lab environment. If the oob-server and oob-switch are not online before the network, out of band management network DHCP will fail.
+
 To control which nodes start and in which order, and to save CPU and memory resources, you can run the simulation manually. Refer to {{<link text="Run the Production Ready Automation" title="Run Production Ready Automation" >}}.
 {{< /notice >}}
 
@@ -68,7 +105,7 @@ To start a golden standard demo topology using a bash script:
 
 4. Run the `start-demo.sh` script. If you do not intent to use NetQ, add the `--no-netq` option.
 
-    {{%notice note%}}
+{{%notice note%}}
 
 An Ubuntu 18.04LTS box with additional CPU and memory resources for installing NetQ is included in the out-of-band management network of the base Cumulus Networks reference topology. NetQ is *not* a required element for any of the golden standard demos to function but is used in the topology to power CI/CD testing, and to preview and test the NetQ functionality. If you do not intent to use NetQ, Cumulus Networks recommends that you do not start it in simulation to save an additional 8GB of memory.
 
@@ -100,7 +137,7 @@ An Ubuntu 18.04LTS box with additional CPU and memory resources for installing N
 
     ```
     user@host:~/dc_configs_vxlan_evpnsym/cldemo2/simulation# vagrant ssh oob-mgmt-server
-                                                 _
+                                                     _
           _______   x x x                           | |
      ._  <_______~ x X x   ___ _   _ _ __ ___  _   _| |_   _ ___
     (' \  ,' || `,        / __| | | | '_ ` _ \| | | | | | | / __|
@@ -153,7 +190,7 @@ The `-i` flag is used to specify the location of the Ansible inventory. This is 
 
 Check the `README.md` file on the selected demo repository for more information about the topology, such as IP addresses, and for a small guided tour of the specific technologies or architectures in the demo.
 
-## Start a Blank Reference Topology
+### Start a Blank Reference Topology
 
 The Cumulus Networks reference topology is included as a submodule in all of the Cumulus Networks golden standard demos, which eliminates the need to clone the base reference topology project. <!-- For more information about submodules see the contributor’s guide. TODO: add link to contributor's guide -->
 
@@ -200,9 +237,9 @@ You can start the reference topology by itself if you want to build configuratio
 
 5. Use the `vagrant ssh` command to ssh into the oob-mgmt-server. This is the jump box to access the rest of the simulation.
 
-For more information about how to start developing and building onto this blank slate topology, refer to the `README.md` file for the Cumulus Networks reference topology GitLab project and the developer's guide.
+For more information about how to start developing and building onto this blank slate topology, refer to the `README.md` file for the Cumulus Networks {{<exlink url="https://gitlab.com/cumulus-consulting/goldenturtle/cldemo2" text="reference topology GitLab project" >}}.
 
-## Destroy and End a Simulation
+### Destroy and End a Simulation
 
 To destroy *all* the systems in the simulation, run the `vagrant destroy -f` command from the `simulation` folder:
 
