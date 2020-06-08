@@ -6,68 +6,76 @@ product: Cumulus Networks Guides
 version: "1.0"
 draft: true
 ---
-There are two ways to get started:
+You can get started with the PRA in one two ways:
 
-- Using {{<exlink url="https://cumulusnetworks.com/products/cumulus-in-the-cloud/" text="Cumulus in the Cloud">}} to try directly on Cumulus infrastructure.
-- Using your own Vagrant, libvirt and KVM server. This requires a minimum of 15GB of ram with a preferred 24GB of RAM for the demo environment.
+- Use {{<exlink url="https://cumulusnetworks.com/products/cumulus-in-the-cloud/" text="Cumulus in the Cloud">}} to try the PRA directly on Cumulus infrastructure.
+- Use your own Vagrant, libvirt and KVM server. This requires a minimum of 15GB of ram with a preferred 24GB of RAM for the demo environment.
 
-## Using Cumulus in the Cloud 
+## Use Cumulus in the Cloud
 
-### Request a demo environment
+To use Cumulus in the Cloud, you need to request a demo environment:
 
-1. Visit {{<exlink url="https://cumulusnetworks.com/products/cumulus-in-the-cloud/" text="Cumulus in the Cloud">}} and click "Build a Simulation".
+1. Visit {{<exlink url="https://cumulusnetworks.com/products/cumulus-in-the-cloud/" text="Cumulus in the Cloud">}} and click **Build a Simulation**.
 
 {{%notice note%}}
-You do not have to be a current Cumulus Networks customer to use Cumulus in the Cloud, but you do need to register for a cumulusnetworks.com account to start a simulation. 
+
+You do not have to be a current Cumulus Networks customer to use Cumulus in the Cloud, but you do need to register for a `cumulusnetworks.com` account to start a simulation.
+
 {{%/notice%}}
 
-It will take just a few minutes to launch the simulation. You will receive an email with a link to your lab when it is ready.
+It takes just a few minutes to launch the simulation. You receive an email with a link to your lab when it is ready.
 
-2. Once the lab launches, on the left-side navigation, the "Select a demo" menu will have the choice of PRA demos to run.
+2. After the lab starts, the **Select a demo** menu on the left side navigation lists the PRA demos you can run.
 
 {{<img src="/images/guides/citc-choose-demo.png">}}
 
-Select your demo and click "Run Now". This will fully provision the demo environment.
+Select your demo and click **Run Now** to fully provision the demo environment.
 
 {{<img src="/images/guides/citc-run-demo.gif">}}
 
-3. When the lab is provisioned you can click directly on a device to access the console, login and run commands.
+3. When the lab is provisioned, you can click directly on a device to access the console, login, and run commands.
 
 {{<img src="/images/guides/citc-access-console.gif">}}
 
 {{% notice tip %}}
-The default Cumulus Linux username and password of username `cumulus` and password `CumulusLinux!` is used on all devices in the lab.
+
+The default Cumulus Linux username `cumulus` and password `CumulusLinux!` is used on all devices in the lab.
+
 {{% /notice %}}
 
-4. (Optional) If you wish to see or modify any playbooks in the lab, access the oob-mgmt-server through the CITC "Advanced" button on the left navigation bar. This will provide you with information on how to SSH to the oob-mgmt-server.
+4. (Optional) If you want to see or modify any playbooks in the lab, access the oob-mgmt-server through the CITC **Advanced** button on the left navigation bar. This provides you with information on how to SSH to the oob-mgmt-server.
 
 {{<img src="/images/guides/citc-oob-ssh.gif">}}
 
-You can scroll down to the "Services" pane and see the `ssh oob-mgmt-server` service. The link will launch an SSH session. If this link fails you can ssh to `air.cumulusnetworks.com` using the port defined in "External Port".
+You can scroll down to the **Services** pane and see the `ssh oob-mgmt-server` service. The link launches an SSH session. If this link fails, you can ssh to `air.cumulusnetworks.com` using the port defined in `External Port`.
 
-5. (Optional) From the `/home/cumulus` directory on the oob-mgmt-server you will see a folder name matching the repo of the demo you selected, for example, `dc_configs_vxlan_evpnsym`. These are directly cloned from the {{<exlink url="https://gitlab.com/cumulus-consulting/goldenturtle" text="Golden Turtle" >}} repository.
+5. (Optional) From the `/home/cumulus` directory on the oob-mgmt-server, you see a folder name matching the repository of the demo you selected; for example, `dc_configs_vxlan_evpnsym`. This is directly cloned from the {{<exlink url="https://gitlab.com/cumulus-consulting/goldenturtle" text="Golden Turtle" >}} repository.
 
-## Using Vagrant and Libvirt
+## Use Vagrant and Libvirt
 
 {{% notice tip %}}
+
 The full {{<exlink url="https://gitlab.com/cumulus-consulting/goldenturtle/cldemo2/" text="cldemo2" >}} topology requires a minimum of **2.4 GB** of RAM. Without NetQ it requires a minimum of **1.6 GB** of RAM.
 
-More information on the minimum requirements and tested software versions can be found in the {{<link title="Run Production Ready Automation" text="User Guide" >}}
+For more information on the minimum requirements and tested software versions, refer to the {{<link title="Run Production Ready Automation" text="User Guide" >}}.
+
 {{% /notice %}}
 
 ### Start a Golden Standard Demo Topology
 
-The following procedure describes the easiest way to start a Production Ready automation demo using a bash script provided in the package. The bash script performs the following steps automatically:
+The following procedure describes the easiest way to start a PRA demo using a bash script provided in the package. The bash script performs the following steps automatically:
 
 - Checks if the Cumulus Networks reference topology submodule is present and attempts to download the reference topology if it is not present.
 - Runs the `vagrant up` command for the out-of-band management network devices.
-- Runs a series of `vagrant up` commands to bring up the rest of the network simulation.
+- Runs a series of `vagrant up` commands to start the rest of the network simulation.
 - Runs the `vagrant scp` command to copy the network automation into the simulation.
 
 {{< notice note>}}
-The order in which devices are started is critical to the proper functioning of the lab environment. If the oob-server and oob-switch are not online before the network, out of band management network DHCP will fail.
+
+The order in which devices start is critical to the proper functioning of the lab environment. If the oob-server and oob-switch are not online before the network, out of band management network DHCP fails.
 
 To control which nodes start and in which order, and to save CPU and memory resources, you can run the simulation manually. Refer to {{<link text="Run the Production Ready Automation" title="Run Production Ready Automation" >}}.
+
 {{< /notice >}}
 
 To start a golden standard demo topology using a bash script:
@@ -192,7 +200,7 @@ Check the `README.md` file on the selected demo repository for more information 
 
 ### Start a Blank Reference Topology
 
-The Cumulus Networks reference topology is included as a submodule in all of the Cumulus Networks golden standard demos, which eliminates the need to clone the base reference topology project. <!-- For more information about submodules see the contributor’s guide. TODO: add link to contributor's guide -->
+The Cumulus Networks reference topology is included as a submodule in all the Cumulus Networks golden standard demos, which eliminates the need to clone the base reference topology project. <!-- For more information about submodules see the contributor’s guide. TODO: add link to contributor's guide -->
 
 You can start the reference topology by itself if you want to build configuration from scratch or intend to start from a completely blank slate network topology.
 
