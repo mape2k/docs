@@ -47,7 +47,7 @@ After installing Cumulus Linux, you are ready to:
 - Install the Cumulus Linux license.
 - Configure Cumulus Linux. This quick start guide provides instructions on configuring switch ports and a loopback interface.
 
-## Getting Started
+## Get Started
 
 When starting Cumulus Linux for the first time, the management port makes a DHCPv4 request. To determine the IP address of the switch, you can cross reference the MAC address of the switch with your DHCP server. The MAC address is typically located on the side of the switch or on the box in which the unit ships.
 
@@ -59,11 +59,11 @@ The default installation includes the system account (root), with full system pr
 cumulus
 ```
 
-When you log into Cumulus Linux for the first time, you must provide a new password for the *cumulus* account, then log back into the system.
+When you log into Cumulus Linux for the first time with the cumulus account, you are prompted to change the default password. After you provide a new password, the SSH session disconnects and you have to reconnect with the new password.
 
 {{%notice note%}}
 
-ONIE includes options that allow you to change the default password for the *cumulus* account automatically during Cumulus Linux installation. Refer to {{<link url="Installing-a-New-Cumulus-Linux-Image" >}}. If the password is changed during installation, use the new password to log in.
+ONIE includes options that allow you to change the default password for the *cumulus* account automatically when you install a new Cumulus Linux image. Refer to {{<link url="Installing-a-New-Cumulus-Linux-Image#onie-installation-options" text="ONIE Installation Options" >}}. You can also  {{<link url="Zero-Touch-Provisioning-ZTP/#set-the-default-cumulus-user-password" text="change the default password using a ZTP script">}}.
 
 {{%/notice%}}
 
@@ -235,9 +235,7 @@ Check that your license is installed with the `cl-license` command.
 
 It is not necessary to reboot the switch to activate the switch ports. After you install the license, restart the `switchd` service. All front panel ports become active and show up as swp1, swp2, and so on.
 
-```
-cumulus@switch:~$ sudo systemctl restart switchd.service
-```
+{{<cl/restart-switchd>}}
 
 If a license is not installed on a Cumulus Linux switch, the `switchd` service does not start. After you install the license, start `switchd` as described above.
 

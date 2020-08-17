@@ -8,6 +8,12 @@ This topic describes how to upgrade Cumulus Linux on your switches to a more rec
 
 Cumulus Networks recommends that you deploy, provision, configure, and upgrade switches using automation, even with small networks or test labs. During the upgrade process, you can quickly upgrade dozens of devices in a repeatable manner. Using tools like Ansible, Chef, or Puppet for configuration management greatly increases the speed and accuracy of the next major upgrade; these tools also enable the quick swap of failed switch hardware.
 
+{{%notice info%}}
+
+In Cumulus Linux 3.7.12, the default password for the cumulus user account has changed to `cumulus`. The first time you log into Cumulus Linux, you are **required** to change this default password. Be sure to update any automation scripts before you upgrade to Cumulus Linux 3.7.12.
+
+{{%/notice%}}
+
 ## Before You Upgrade Cumulus Linux
 
 {{%notice tip%}}
@@ -313,8 +319,10 @@ Because Cumulus Linux is a collection of different Debian Linux packages, be awa
 
 If you are using {{<link url="Multi-Chassis-Link-Aggregation-MLAG" text="MLAG">}} to dual connect two switches in your environment, follow the steps below according to the version of Cumulus Linux from which you are upgrading.
 
+You must upgrade both switches in the MLAG pair to the same release of Cumulus Linux.
+
 {{%notice info%}}
-For Cumulus Linux 3.7.10 and later, MLAG bonds stay single-connected while the switches are running different major releases; for example, while leaf01 is running 3.7.12 and leaf02 is running 4.1.1.
+For Cumulus Linux 3.7.10 and later, MLAG bonds stay single-connected during upgrade while the switches are running different major releases; for example, while leaf01 is running 3.7.12 and leaf02 is running 4.1.1.
 
 This is due to a change in the bonding driver regarding how the *actor port key* is derived, which causes the port key to have a different value for links with the same speed/duplex settings across different major releases. The port key received from the LACP partner must remain consistent between all bond members in order for all bonds to be synchronized. When each MLAG switch sends LACPDUs with different port keys, only links to one MLAG switch are in sync.
 {{%/notice%}}

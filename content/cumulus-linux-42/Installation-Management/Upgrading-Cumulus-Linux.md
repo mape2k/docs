@@ -54,7 +54,7 @@ Understanding the location of configuration data is required for successful upgr
 | `/etc/lldpd.d/` | Configuration directory for lldpd | {{<link title="Link Layer Discovery Protocol">}} | {{<exlink url="https://packages.debian.org/buster/lldpd">}} |
 | `/etc/nsswitch.conf` | Name Service Switch (NSS) configuration file | {{<link title="TACACS+">}} | N/A |
 |`/etc/ssh/` | SSH configuration files | {{<link title="SSH for Remote Access">}} | {{<exlink url="https://wiki.debian.org/SSH">}} |
-| `/etc/sudoers`, `/etc/sudoers.d` | Best practice is to place changes in `/etc/sudoers.d/` instead of `/etc/sudoers`; changes in the `/etc/sudoers.d/` directory are not lost during upgrade. | {{<link title="Using sudo to Delegate Privileges">}} |
+| `/etc/sudoers`, `/etc/sudoers.d` | Best practice is to place changes in `/etc/sudoers.d/` instead of `/etc/sudoers`; changes in the `/etc/sudoers.d/` directory are not lost during upgrade | {{<link title="Using sudo to Delegate Privileges">}} |
 
 {{< /tab >}}
 
@@ -258,6 +258,8 @@ Because Cumulus Linux is a collection of different Debian Linux packages, be awa
 
 If you are using {{<link url="Multi-Chassis-Link-Aggregation-MLAG" text="MLAG">}} to dual connect two switches in your environment, follow the steps below to upgrade the switches.
 
+You must upgrade both switches in the MLAG pair to the same release of Cumulus Linux.
+
 {{%notice warning%}}
 
 For networks with MLAG deployments, Cumulus Networks only supports upgrading to Cumulus Linux 4.2 from version 3.7.10 or later. If you are using a version of Cumulus Linux earlier than 3.7.10, you must upgrade to version 3.7.10 first, then upgrade to version 4.2. Version 3.7.10 is available on the
@@ -266,7 +268,7 @@ For networks with MLAG deployments, Cumulus Networks only supports upgrading to 
 {{%/notice%}}
 
 {{%notice info%}}
-MLAG bonds stay single-connected while the switches are running different major releases; for example, while leaf01 is running 3.7.12 and leaf02 is running 4.2.0.
+During upgrade, MLAG bonds stay single-connected while the switches are running different major releases; for example, while leaf01 is running 3.7.12 and leaf02 is running 4.2.0.
 
 This is due to a change in the bonding driver regarding how the *actor port key* is derived, which causes the port key to have a different value for links with the same speed/duplex settings across different major releases. The port key received from the LACP partner must remain consistent between all bond members in order for all bonds to be synchronized. When each MLAG switch sends LACPDUs with different port keys, only links to one MLAG switch are in sync.
 {{%/notice%}}

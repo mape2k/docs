@@ -14,7 +14,7 @@ Policy-based routing is applied to incoming packets. All packets received on a P
 
 - You can create a *maximum* of 255 PBR match rules and 256 next hop groups (this is the ECMP limit).
 - You can apply only one PBR policy per input interface.
-- You can match on *source* and *destination* IP address only.
+- You can match on *source* and *destination* IP address, or match on Differentiated Services Code Point (DSCP) or Explicit Congestion Notification (ECN) values within a packet.
 - PBR is not supported for GRE or VXLAN tunneling.
 - PBR is not supported on management interfaces, such as eth0.
 - A PBR rule cannot contain both IPv4 and IPv6 addresses.
@@ -26,7 +26,7 @@ Policy-based routing is applied to incoming packets. All packets received on a P
 A PBR policy contains one or more policy maps. Each policy map:
 
 - Is identified with a unique map name and sequence number. The sequence number is used to determine the relative order of the map within the policy.
-- Contains a match source IP rule or a match destination IP rule, and a set rule.
+- Contains a match source IP rule and (or) a match destination IP rule and a set rule, or a match DSCP or ECN rule and a set rule.
    - To match on a source and destination address, a policy map can contain both match source and match destination IP rules.
    - A set rule determines the PBR next hop for the policy. The set rule can contain a single next hop IP address or it can contain a next hop group. A next hop group has more than one next hop IP address so that you can use multiple interfaces to forward traffic. To use ECMP, you configure a next hop group.
 
@@ -44,7 +44,9 @@ To configure a PBR policy:
 
 {{< tab "NCLU Commands ">}}
 
-1. Configure the policy map. The example commands below configure a policy map called `map1` with sequence number 1, that matches on destination address 10.1.2.0/24 and source address 10.1.4.1/24.
+1. Configure the policy map.
+
+    The example commands below configure a policy map called `map1` with sequence number 1, that matches on destination address 10.1.2.0/24 and source address 10.1.4.1/24.
 
     If the IP address in the rule is `0.0.0.0/0 or ::/0`, any IP address is a match. You cannot mix IPv4 and IPv6 addresses in a rule.
 
@@ -53,7 +55,19 @@ To configure a PBR policy:
     cumulus@switch:~$ net add pbr-map map1 seq 1 match src-ip 10.1.4.1/24
     ```
 
-2. Either apply a *next hop* or a *next hop* group to the policy map. The example command below applies the next hop 192.168.0.31 on the output interface swp2 and VRF `rocket` to the `map1` policy map. The output interface and VRF are optional, however, you *must* specify the VRF you want to use for resolution if the next hop is *not* in the default VRF.
+    Instead of matching on IP address, you can match packets according to the DSCP or ECN field in the IP header. The DSCP value can be an integer between 0 and 63 or the DSCP codepoint name. The ECN value can be an integer between 0 and 3. The following example command configures a policy map called `map1` with sequence number 1 that matches on packets with the DSCP value 10:
+
+    ```
+    cumulus@switch:~$ net add pbr-map map1 seq 1 match dscp 10
+    ```
+
+    The following example command configures a policy map called `map1` with sequence number 1 that matches on packets with the ECN value 2:
+
+    ```
+    cumulus@switch:~$ net add pbr-map map1 seq 1 match ecn 2
+    ```
+
+2. Either apply a *next hop* or a *next hop* group to the policy map. The example command below applies the next hop 192.168.0.31 on the output interface swp2 and VRF `rocket` to the `map1` policy map. The next hop must be an IP address. The output interface and VRF are optional, however, you *must* specify the VRF you want to use for resolution if the next hop is *not* in the default VRF.
 
     ```
     cumulus@switch:~$ net add pbr-map map1 seq 1 set nexthop 192.168.0.31 swp2 nexthop-vrf rocket
@@ -69,13 +83,13 @@ To configure a PBR policy:
     cumulus@switch:~$ net add pbr-map map1 seq 1 set nexthop-group group1
     ```
 
-3. If you want the rule to use a specific VRF table as its lookup, set the VRF. If no VRF is set, the rule uses the VRF table the interface is in as its lookup. The example command below sets the rule to use the `dmz` VRF table:
+<!-- FOR 4.3 RELEASE 3. If you want the rule to use a specific VRF table as its lookup, set the VRF. If no VRF is set, the rule uses the VRF table the interface is in as its lookup. The example command below sets the rule to use the `dmz` VRF table:
 
     ```
     cumulus@switch:~$ net add pbr-map map1 seq 1 set vrf dmz
-    ```
+    ```-->
 
-4. Assign the PBR policy to an ingress interface. The example command below assigns the PBR policy `map1` to interface swp51:
+3. Assign the PBR policy to an ingress interface. The example command below assigns the PBR policy `map1` to interface swp51:
 
     ```
     cumulus@switch:~$ net add interface swp51 pbr-policy map1
@@ -93,7 +107,7 @@ You can only set one policy per interface.
 
 {{< tab "vtysh Commands ">}}
 
-1. Before you run the vtysh commands, you need to enable the `pbrd` service in the `/etc/frr/daemons` file, then restart FRR with the `systemctl restart frr.service` command.
+1. Before you run the `vtysh` commands, you need to enable the `pbrd` service in the `/etc/frr/daemons` file, then restart FRRouting with the `systemctl restart frr.service` command.
 
     ```
     cumulus@leaf01:~$ sudo nano /etc/frr/daemons
@@ -115,7 +129,9 @@ You can only set one policy per interface.
     ...
     ```
 
-2. Configure the policy map. The example commands below configure a policy map called `map1` with sequence number 1, that matches on destination address 10.1.2.0/24 and source address 10.1.4.1/24.
+2. Configure the policy map.
+
+    The example commands below configure a policy map called `map1` with sequence number 1, that matches on destination address 10.1.2.0/24 and source address 10.1.4.1/24.
 
     ```
     cumulus@switch:~$ sudo vtysh
@@ -128,7 +144,23 @@ You can only set one policy per interface.
 
     If the IP address in the rule is `0.0.0.0/0 or ::/0`, any IP address is a match. You cannot mix IPv4 and IPv6 addresses in a rule.
 
-3.  Either apply a *next hop* or a *next hop* group to the policy map. The example command below applies the next hop 192.168.0.31 on the output interface swp2 and VRF `rocket` to the `map1` policy map. The output interface and VRF are optional, however, you *must* specify the VRF you want to use for resolution if the next hop is *not* in the default VRF.
+    Instead of matching on IP address, you can match packets according to the DSCP or ECN field in the IP header. The DSCP value can be an integer between 0 and 63 or the DSCP codepoint name. The ECN value can be an integer between 0 and 3. The following example command configures a policy map called `map1` with sequence number 1 that matches on packets with the DSCP value 10:
+
+    ```
+    switch# configure terminal
+    switch(config)# pbr-map map1 seq 1
+    switch(config-pbr-map)# match dscp 10
+    ```
+
+    The following example command configures a policy map called `map1` with sequence number 1 that matches on packets with the ECN value 2:
+
+    ```
+    switch# configure terminal
+    switch(config)# pbr-map map1 seq 1
+    switch(config-pbr-map)# match ecn 2
+    ```
+
+3. Either apply a *next hop* or a *next hop* group to the policy map. The example command below applies the next hop 192.168.0.31 on the output interface swp2 and VRF `rocket` to the `map1` policy map. The next hop must be an IP address. The output interface and VRF are optional, however, you *must* specify the VRF you want to use for resolution if the next hop is *not* in the default VRF.
 
     ```
     switch(config-pbr-map)# set nexthop 192.168.0.31 swp2 nexthop-vrf rocket
@@ -151,16 +183,16 @@ You can only set one policy per interface.
     switch(config)#
     ```
 
-4. If you want the rule to use a specific VRF table as its lookup, set the VRF. If no VRF is set, the rule uses the VRF table the interface is in as its lookup. The example command below sets the rule to use the `dmz` VRF table:
+<!-- FOR 4.3 RELEASE 4. If you want the rule to use a specific VRF table as its lookup, set the VRF. If no VRF is set, the rule uses the VRF table the interface is in as its lookup. The example command below sets the rule to use the `dmz` VRF table:
 
     ```
     switch(config)# pbr-map map1 seq 1
     switch(config-pbr-map)# set vrf dmz
     switch(config-pbr-map)# exit
     switch(config)#
-    ```
+    ```-->
 
-. Assign the PBR policy to an ingress interface. The example command below assigns the PBR policy `map1` to interface swp51:
+4. Assign the PBR policy to an ingress interface. The example command below assigns the PBR policy `map1` to interface swp51:
 
     ```
     switch(config)# interface swp51
@@ -181,7 +213,7 @@ You can only set one policy per interface.
 
 {{< /tabs >}}
 
-The NCLU and vtysh commands save the configuration in the `/etc/frr/frr.conf` file. For example:
+The NCLU and `vtysh` commands save the configuration in the `/etc/frr/frr.conf` file. For example:
 
 ```
 ...
@@ -196,81 +228,41 @@ pbr-map map1 seq 1
  match dst-ip 10.1.2.0/24
  match src-ip 10.1.4.1/24
  set nexthop nexthop-group group1
- set vrf dmz
 ...
 ```
-
-## Configuration Example
-
-In the following example, the PBR-enabled switch has a PBR policy to route all traffic from the Internet to a server that performs anti-DDOS. The traffic returns to the PBR-enabled switch after being cleaned and is then passed onto the regular destination based routing mechanism.
-
-{{< img src = "/images/cumulus-linux/pbr-example.png" >}}
-
-The configuration for the example above is:
-
-{{< tabs "TabID197 ">}}
-
-{{< tab "NCLU Commands ">}}
-
-```
-cumulus@switch:~$ net add pbr-map map1 seq 1 match src-ip 0.0.0.0/0
-cumulus@switch:~$ net add pbr-map map1 seq 1 set nexthop 192.168.0.32
-cumulus@switch:~$ net add interface swp51 pbr-policy map1
-cumulus@switch:~$ net pending
-cumulus@switch:~$ net commit
-```
-
-{{< /tab >}}
-
-{{< tab "vtysh Commands ">}}
-
-```
-cumulus@switch:~$ sudo vtysh
-
-switch# configure terminal
-switch(config)# pbr-map map1 seq 1
-switch(config-pbr-map)# match src-ip 0.0.0.0/0
-switch(config-pbr-map)# set nexthop 192.168.0.32
-switch(config-pbr-map)# exit
-switch(config)# interface swp51
-switch(config-if)# pbr-policy map1
-switch(config-if)# end
-switch# write memory
-switch# exit
-cumulus@switch:~$
-```
-
-{{< /tab >}}
-
-{{< /tabs >}}
-
-The NCLU and vtysh commands save the configuration in the `/etc/frr/frr.conf` file. For example:
-
-```
+ <!--FOR 3.4 RELEASE
+ ```
 ...
 interface swp51
  pbr-policy map1
 ...
-pbr-map map1 seq 1
- match src-ip 0.0.0.0/0
- set nexthop 192.168.0.32
+nexthop-group group1
+ nexthop 192.168.0.21 swp1 nexthop-vrf rocket
+ nexthop 192.168.0.22
 ...
-```
+pbr-map map1 seq 1
+ match dst-ip 10.1.2.0/24
+ match src-ip 10.1.4.1/24
+ set nexthop nexthop-group group1
+ set vrf dmz
+...
+``` 
+ -->
 
 ## Review Your Configuration
 
 Use the following commands to see the configured PBR policies.
 
-To see the policies applied to all interfaces on the switch, run the NCLU `net show pbr interface` command or the vtysh `show pbr interface` command. For example:
+To see the policies applied to all interfaces on the switch, run the NCLU `net show pbr interface` command or the `vtysh` `show pbr interface` command. For example:
 
 ```
 cumulus@switch:~$ net show pbr interface
 swp55s3(67) with pbr-policy map1
 ```
 
-To see the policies applied to a specific interface on the switch, add the interface name at the end of the command; for example, `net show pbr interface swp51` (or `show pbr interface swp51` in vtysh).
+To see the policies applied to a specific interface on the switch, add the interface name at the end of the command; for example, `net show pbr interface swp51` (or `show pbr interface swp51` in `vtysh`).
 
-To see information about all policies, including mapped table and rule numbers, run the NCLU `net show pbr map` command or the vtysh `show pbr map` command. If the rule is not set, you see a reason why.
+To see information about all policies, including mapped table and rule numbers, run the NCLU `net show pbr map` command or the `vtysh` `show pbr map` command. If the rule is not set, you see a reason why.
 
 ```
 cumulus@switch:~$ net show pbr map
@@ -285,9 +277,9 @@ cumulus@switch:~$ net show pbr map
       Installed: yes Tableid: 10004
 ```
 
-To see information about a specific policy, what it matches, and with which interface it is associated, add the map name at the end of the command; for example, `net show pbr map map1` (or `show pbr map map1` in vtysh).
+To see information about a specific policy, what it matches, and with which interface it is associated, add the map name at the end of the command; for example, `net show pbr map map1` (or `show pbr map map1` in `vtysh`).
 
-To see information about all next hop groups, run the NCLU `net show pbr nexthop-group` command or the vtysh `show pbr nexthop-group` command.
+To see information about all next hop groups, run the NCLU `net show pbr nexthop-group` command or the `vtysh` `show pbr nexthop-group` command.
 
 ```
 cumulus@switch:~$ net show pbr nexthop-group
@@ -305,7 +297,7 @@ Valid: yes nexthop 192.168.8.2
 Valid: yes nexthop 192.168.8.3
 ```
 
-To see information about a specific next hop group, add the group name at the end of the command; for example, `net show pbr nexthop-group group1` (or `show pbr nexthop-group group1` in vtysh).
+To see information about a specific next hop group, add the group name at the end of the command; for example, `net show pbr nexthop-group group1` (or `show pbr nexthop-group group1` in `vtysh`).
 
 {{%notice note%}}
 
@@ -313,7 +305,7 @@ A new Linux routing table ID is used for each next hop and next hop group.
 
 {{%/notice%}}
 
-## Modifying Existing PBR Rules
+## Modify Existing PBR Rules
 
 When you want to change or extend an existing PBR rule, you must first delete the conditions in the rule, then add the rule back with the modification or addition.
 
@@ -611,3 +603,60 @@ net commit
 ```
 
 {{%/notice%}}
+
+## Example Configuration
+
+In the following example, the PBR-enabled switch has a PBR policy to route all traffic from the Internet to a server that performs anti-DDOS. The traffic returns to the PBR-enabled switch after being cleaned and is then passed onto the regular destination based routing mechanism.
+
+{{< img src = "/images/cumulus-linux/pbr-example.png" >}}
+
+The configuration for the example above is:
+
+{{< tabs "TabID197 ">}}
+
+{{< tab "NCLU Commands ">}}
+
+```
+cumulus@switch:~$ net add pbr-map map1 seq 1 match src-ip 0.0.0.0/0
+cumulus@switch:~$ net add pbr-map map1 seq 1 set nexthop 192.168.0.32
+cumulus@switch:~$ net add interface swp51 pbr-policy map1
+cumulus@switch:~$ net pending
+cumulus@switch:~$ net commit
+```
+
+{{< /tab >}}
+
+{{< tab "vtysh Commands ">}}
+
+```
+cumulus@switch:~$ sudo vtysh
+
+switch# configure terminal
+switch(config)# pbr-map map1 seq 1
+switch(config-pbr-map)# match src-ip 0.0.0.0/0
+switch(config-pbr-map)# set nexthop 192.168.0.32
+switch(config-pbr-map)# exit
+switch(config)# interface swp51
+switch(config-if)# pbr-policy map1
+switch(config-if)# end
+switch# write memory
+switch# exit
+cumulus@switch:~$
+```
+
+{{< /tab >}}
+
+{{< /tabs >}}
+
+The NCLU and `vtysh` commands save the configuration in the `/etc/frr/frr.conf` file. For example:
+
+```
+...
+interface swp51
+ pbr-policy map1
+...
+pbr-map map1 seq 1
+ match src-ip 0.0.0.0/0
+ set nexthop 192.168.0.32
+...
+```

@@ -155,9 +155,7 @@ ecmp_hash_seed = 50
 ...
 ```
 
-```
-cumulus@switch:~$ sudo systemctl restart switchd.service
-```
+{{<cl/restart-switchd>}}
 
 {{< /tab >}}
 
@@ -196,24 +194,16 @@ To configure custom hashing, edit the `/etc/cumulus/datapath/traffic.conf` file:
 
 1. To enable custom hashing, uncomment the `hash_config.enable = true` line.
 2. To enable a field, set the field to `true`. To disable a field, set the field to `false`.
-3. Run the `echo 1 > /cumulus/switchd/config/traffic/reload` command:
+3. Run the `echo 1 > /cumulus/switchd/ctrl/hash_config_reload` command. This command does not cause any traffic interruptions.
 
 The following shows an example `/etc/cumulus/datapath/traffic.conf` file:
 
 ```
 cumulus@switch:~$ sudo nano /etc/cumulus/datapath/traffic.conf
 ...
-# HASH config for ECMP to enable custom fields
-# Fields will be applicable for ECMP hash
-# calculation
-#Note: Hash seed can be configured in traffic.conf
-#/etc/cumulus/datapath/traffic.conf
-#
 # Uncomment to enable custom fields configured below
 hash_config.enable = true
 
-#symmetric hash will get disabled
-#if sip/dip or sport/dport are not enabled in pair
 #hash Fields available ( assign true to enable)
 #ip protocol
 hash_config.ip_prot = true
@@ -293,7 +283,7 @@ The Mellanox Spectrum ASIC assigns packets to hash buckets and assigns hash buck
 
 - When a next hop is removed, the assigned buckets are distributed to the remaining next hops.
 - When a next hop is added, **no** buckets are assigned to the new next hop until the background thread rebalances the load.
-- The load gets rebalanced when the active flow timer specified by the `resilient_hash_active_timer` setting expires if, and only if, there are inactive hash buckets available; the new next hop may remain unpopulated until the period set in `resilient_hash_active_timer` expires
+- The load gets rebalanced when the active flow timer specified by the `resilient_hash_active_timer` setting expires if, and only if, there are inactive hash buckets available; the new next hop may remain unpopulated until the period set in `resilient_hash_active_timer` expires.
 - When the `resilient_hash_max_unbalanced_timer` setting expires and the load is not balanced, the thread migrates any bucket(s) to different next hops to rebalance the load.
 
 As a result, any flow may be migrated to any next hop, depending on flow activity and load balance conditions; over time, the flow may get pinned, which is the default setting and behavior.
@@ -367,7 +357,6 @@ Mellanox switches with the Spectrum ASIC allow for two custom options to allocat
 
 {{%/notice%}}
 
-
 To enable resilient hashing, edit `/etc/cumulus/datapath/traffic.conf`:
 
 1. Enable resilient hashing:
@@ -387,11 +376,9 @@ To enable resilient hashing, edit `/etc/cumulus/datapath/traffic.conf`:
 
 3. {{<link url="Configuring-switchd#restart-switchd" text="Restart">}} the `switchd` service:
 
-    ```
-    cumulus@switch:~$ sudo systemctl restart switchd.service
-    ```
+    {{<cl/restart-switchd>}}
 
-## Caveats and Errata
+## Considerations
 
 ### IPv6 Route Replacement
 
@@ -413,7 +400,7 @@ To enable the IPv6 route replacement option:
     cumulus@switch:~$ sudo nano /etc/frr/daemons
     ...
     vtysh_enable=yes
-    zebra_options=" -M snmp -A 127.0.0.1 --v6-rr-semantics -s 90000000"
+    zebra_options=" -M cumulus_mlag -M snmp -A 127.0.0.1 --v6-rr-semantics -s 90000000"
     bgpd_options=" -M snmp  -A 127.0.0.1"
     ospfd_options=" -M snmp -A 127.0.0.1"
       ...

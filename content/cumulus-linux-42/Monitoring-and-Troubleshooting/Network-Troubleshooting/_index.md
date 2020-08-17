@@ -256,6 +256,7 @@ Always place your rules files under `/etc/cumulus/acl/policy.d/`.
 - On Broadcom switches, SPAN does not capture egress traffic.
 - Cumulus Linux does not support IPv6 ERSPAN destinations.
 - ERSPAN does not cause the kernel to send ARP requests to resolve the next hop for the ERSPAN destination. If an ARP entry for the destination/next hop does not already exist in the kernel, you need to manually resolve this before mirrored traffic is sent (using ping or arping).
+- Mirroring to the same interface that is being monitored will cause a recursive flood of traffic and may impact traffic on other interfaces.
 
 ### Configure SPAN for Switch Ports
 
@@ -409,9 +410,16 @@ cumulus@switch:~$ sudo iptables -L -v | grep SPAN
 
 ### Use the CPU port as the SPAN Destination
 
-You can set CPU as a SPAN destination interface to mirror data plane traffic to the CPU. The SPAN traffic is sent to a separate network interface mirror where you can analyze it with `tcpdump`. This is a useful feature if you do not have any free external ports  on the switch for monitoring purposes. SPAN traffic does not appear on switch ports.
+You can set the CPU port as a SPAN destination interface to mirror data plane traffic to the CPU. The SPAN traffic is sent to a separate network interface mirror where you can analyze it with `tcpdump`. This is a useful feature if you do not have any free external ports  on the switch for monitoring purposes. SPAN traffic does not appear on switch ports.
 
 Cumulus Linux controls how much traffic reaches the CPU so that mirrored traffic does not overwhelm the CPU.
+
+{{%notice note%}}
+
+- CPU port as a SPAN destination interface is supported on Mellanox switches only.
+- Egress Mirroring for control plane generated traffic to the CPU port is not supported.
+
+{{%/notice%}}
 
 To use the CPU port as the SPAN destination, create a file in the `/etc/cumulus/acl/policy.d/` directory and add the rules. The following example rule matches on swp1 ingress traffic that has the source IP Address 10.10.1.1. When a match occurs, the traffic is mirrored to the CPU:
 
@@ -428,10 +436,16 @@ When a match occurs, the traffic is is mirrored to the CPU:
      -A FORWARD -o swp1 -s 10.10.1.1 -j SPAN --dport cpu
 ```
 
-You can use tcpcdump to monitor traffic mirrored to the CPU on the switch. You can also use filters for tcpdump. To use `tcpcdump` to monitor traffic mirrored to the CPU, run the following command:
+Install the rules:
 
 ```
-tcpdump -i mirror
+cumulus@switch:~$ sudo cl-acltool -i
+```
+
+You can use `tcpcdump` to monitor traffic mirrored to the CPU on the switch. You can also use filters for `tcpdump`. To use `tcpcdump` to monitor traffic mirrored to the CPU, run the following command:
+
+```
+cumulus@switch:~$ sudo tcpdump -i mirror
 ```
 
 ### Configure ERSPAN

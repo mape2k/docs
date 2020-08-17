@@ -13,9 +13,9 @@ While developing and testing the provisioning logic, you can use the `ztp` comma
 
 ZTP in Cumulus Linux can occur automatically in one of the following ways, in this order:
 
-- Through a local file
-- Using a USB drive inserted into the switch (ZTP-USB)
-- Through DHCP
+1. Through a local file
+1. Using a USB drive inserted into the switch (ZTP-USB)
+1. Through DHCP
 
 Each method is discussed in greater detail below.
 
@@ -221,6 +221,43 @@ Several ZTP example scripts are available in the {{<exlink url="https://github.c
 ## Best Practices
 
 ZTP scripts come in different forms and frequently perform many of the same tasks. As BASH is the most common language used for ZTP scripts, the following BASH snippets are provided to accelerate your ability to perform common tasks with robust error checking.
+
+### Set the Default Cumulus User Password
+
+The default *cumulus* user account password is `cumulus`. When you log into Cumulus Linux for the first time, you must provide a new password for the *cumulus* account, then log back into the system. This password change at first login is **required** in Cumulus Linux 4.2 and later.
+
+Add the following function to your ZTP script to change the default *cumulus* user account password to a clear-text password. The example changes the password `cumulus` to `MyP4$$word`.
+
+```
+function set_password(){
+     # Unexpire the cumulus account
+     passwd -x 99999 cumulus
+     # Set the password
+     echo 'cumulus:MyP4$$word' | chpasswd
+}
+set_password
+```
+
+If you have an insecure management network, set the password with an encrypted hash instead of a clear-text password. Using an encrypted hash is recommended.
+
+- First, generate a sha-512 password hash with the following python commands. The example commands generate a sha-512 password hash for the password `MyP4$$word`.
+
+   ```
+   user@host:~$ python3 -c "import crypt; print(crypt.crypt('MyP4$$word',salt=crypt.mksalt()))"
+   $6$hs7OPmnrfvLNKfoZ$iB3hy5N6Vv6koqDmxixpTO6lej6VaoKGvs5E8p5zNo4tPec0KKqyQnrFMII3jGxVEYWntG9e7Z7DORdylG5aR/
+   ```
+
+- Then, add the following function to the ZTP script to change the default *cumulus* user account password:
+
+   ```
+   function set_password(){
+        # Unexpire the cumulus account
+        passwd -x 99999 cumulus
+        # Set the password
+        usermod -p '$6$hs7OPmnrfvLNKfoZ$iB3hy5N6Vv6koqDmxixpTO6lej6VaoKGvs5E8p5zNo4tPec0KKqyQnrFMII3jGxVEYWntG9e7Z7DORdylG5aR/' cumulus
+   }
+   set_password
+   ```
 
 ### Install a License
 
@@ -604,7 +641,7 @@ URL            None
 
 You can run the NCLU `net show system ztp script` or `net show system ztp json` command to see the current `ztp` state.
 
-## Notes
+## Considerations
 
 - During the development of a provisioning script, the switch might need to be rebooted.
 - You can use the Cumulus Linux `onie-select -i` command to cause the switch to reprovision itself and install a network operating system again using ONIE.

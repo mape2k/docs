@@ -50,7 +50,7 @@ To configure custom hash, edit the `/etc/cumulus/datapath/traffic.conf` file:
 
 1. To enable custom hashing, uncomment the `lag_hash_config.enable = true` line.
 2. To enable a field, set the field to `true`. To disable a field, set the field to `false`.
-3. Run the `echo 1 > /cumulus/switchd/config/traffic/reload` command.
+3. Run the `echo 1 > /cumulus/switchd/ctrl/hash_config_reload` command. This command does not cause any traffic interruptions.
 
 The following shows an example `/etc/cumulus/datapath/traffic.conf` file:
 
@@ -111,7 +111,7 @@ cumulus@switch:~$ net commit
 Edit the `/etc/network/interfaces` file to add a stanza for the bond, then run the `ifreload -a` command. The example below creates a bond called `bond0` with slaves swp1, swp2, swp3, and swp4:
 
 ```
-cumulus@switch:~$ sudo nanno /etc/network/interfaces
+cumulus@switch:~$ sudo nano /etc/network/interfaces
 ...
 auto bond0
 iface bond0
@@ -184,7 +184,7 @@ cumulus@switch:~$ net commit
 Edit the `/etc/network/interfaces` file to add the parameter to the bond stanza, then run the `ifreload -a` command. The following example sets the bond mode for bond01 to `balance-xor`:
 
 ```
-cumulus@switch:~$ sudo nanno /etc/network/interfaces
+cumulus@switch:~$ sudo nano /etc/network/interfaces
 ...
 auto bond1
 iface bond1
@@ -303,7 +303,7 @@ Slave queue ID: 0
 The detailed output in `/proc/net/bonding/<filename>` includes the actor/partner LACP information. This information is not necessary and requires you to use `sudo` to view the file.
 {{%/notice%}}
 
-## Caveats and Errata
+## Considerations
 
 - An interface cannot belong to multiple bonds.
 - A bond can have subinterfaces, but subinterfaces cannot have a bond.

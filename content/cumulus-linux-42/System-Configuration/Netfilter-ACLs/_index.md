@@ -253,9 +253,7 @@ To always start `switchd` with nonatomic updates:
 
 3. {{%link url="Configuring-switchd#restart-switchd" text="Restart `switchd`"%}}:
 
-    ```
-    cumulus@switch:~$ sudo systemctl restart switchd.service
-    ```
+   {{<cl/restart-switchd>}}
 
 {{%notice note%}}
 
@@ -296,7 +294,11 @@ To estimate the number of rules you can create from an ACL entry, first determin
 By default, each entry occupies one double wide entry, except if the entry is one of the following:
 
 - An entry with multiple comma-separated input interfaces is split into one rule for each input interface (listed after `--in-interface` below). For example, this entry splits into two rules:
--A FORWARD --in-interface swp1s0,swp1s1 -p icmp -j ACCEPT
+
+  ```
+  -A FORWARD --in-interface swp1s0,swp1s1 -p icmp -j ACCEPT
+  ```
+
 - An entry with multiple comma-separated output interfaces is split into one rule for each output interface (listed after `--out-interface` below). This entry splits into two rules:
 
     ```
@@ -594,11 +596,16 @@ Installing acl policy ...
 Done.
 ```
 
-Install all rules and policies included in `/etc/cumulus/acl/policy.conf`:
+Apply all rules and policies included in `/etc/cumulus/acl/policy.conf`:
 
 ```
 cumulus@switch:~$ sudo cl-acltool -i
 ```
+
+In addition to ensuring that the rules and policies referenced by
+`/etc/cumulus/acl/policy.conf` are installed, this will remove any
+currently active rules and policies that are not contained in the
+files referenced by `/etc/cumulus/acl/policy.conf`.
 
 ## Specify the Policy Files to Install
 
@@ -661,7 +668,7 @@ The Trident3 ASIC is divided into 12 slices, organized into 4 groups for ACLs. E
 | Egress raw limit                 | 512                    | 0                      | 512                       | 0                         |
 | Egress limit with default rules  | 512 (28 default)       | 0                      | 512 (28 default)          | 0                         |
 
-Due to a hardware limitation on Trident3 switches, certain broadcast packets that are VXLAN decapsulated and sent to the CPU do not hit the normal INPUT chain ACL rules installed with `cl-acltool`. See [Caveats and Errata](Default-Cumulus-Linux-ACL-Configuration#caveats-and-errata).
+Due to a hardware limitation on Trident3 switches, certain broadcast packets that are VXLAN decapsulated and sent to the CPU do not hit the normal INPUT chain ACL rules installed with `cl-acltool`. See {{<link text="default ACL considerations" url="Default-Cumulus-Linux-ACL-Configuration#considerations">}}.
 
 ### Broadcom Trident II+ Limits
 
@@ -776,7 +783,7 @@ For example, the `-A FORWARD --out-interface vlan100 -p icmp6 -j ACCEPT` rule is
 
 {{%/notice%}}
 
-#### Caveats
+#### Considerations
 
 Splitting rules across the ingress TCAM and the egress TCAM causes the ingress IPv6 part of the rule to match packets going to all destinations, which can interfere with the regular expected linear rule match in a sequence. For example:
 
@@ -1054,9 +1061,9 @@ Cumulus Linux does not support the keyword `iprouter` (typically used for traffi
 
 {{%/notice%}}
 
-## Example Scenario
+## Example Configuration
 
-The following example scenario demonstrates how several different rules are applied.
+The following example demonstrates how several different rules are applied.
 
 {{< img src = "/images/cumulus-linux/acl-diagram.png" >}}
 
@@ -1188,12 +1195,7 @@ The following rule blocks any traffic with source MAC address 00:00:00:00:00:12 
 [ebtables] -A FORWARD -s 00:00:00:00:00:12 -d 08:9e:01:ce:e2:04 -j DROP
 ```
 
-## Useful Links
-
-- {{<exlink url="http://www.netfilter.org/" text="Netfilter website">}}
-- {{<exlink url="http://www.netfilter.org/documentation/HOWTO//packet-filtering-HOWTO-6.html" text="Netfilter.org packet filtering how-to">}}
-
-## Caveats and Errata
+## Considerations
 
 ### Not All Rules Supported
 
@@ -1221,7 +1223,7 @@ On Broadcom-based switches, LOG actions can only be done on inbound interfaces (
 
 ### SPAN Sessions that Reference an Outgoing Interface
 
-SPAN sessions that reference an outgoing interface create mirrored packets based on the ingress interface before the routing/switching decision. For an example, see the {{<link url="Network-Troubleshooting#span-sessions-that-reference-an-outgoing-interface" text="SPAN Sessions that Reference an Outgoing Interface">}} in the Network Troubleshooting chapter.
+SPAN sessions that reference an outgoing interface create mirrored packets based on the ingress interface before the routing/switching decision. See {{<link url="Network-Troubleshooting#span-sessions-that-reference-an-outgoing-interface" text="SPAN Sessions that Reference an Outgoing Interface">}} and {{<link url="Network-Troubleshooting/#use-the-cpu-port-as-the-span-destination" text="Use the CPU Port as the SPAN Destination">}} in the Network Troubleshooting section.
 
 ### Tomahawk Hardware Limitations
 
@@ -1372,3 +1374,8 @@ To work around this issue, duplicate the ACL rule on each physical port of the b
 -A FORWARD --out-interface <bond-member-port-1> -j DROP
 -A FORWARD --out-interface <bond-member-port-2> -j DROP
 ```
+
+## Related Information
+
+- {{<exlink url="http://www.netfilter.org/" text="Netfilter website">}}
+- {{<exlink url="http://www.netfilter.org/documentation/HOWTO//packet-filtering-HOWTO-6.html" text="Netfilter.org packet filtering how-to">}}
