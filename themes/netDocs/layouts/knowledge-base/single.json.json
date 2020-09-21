@@ -1,0 +1,10 @@
+{{ define "response" }}
+  {{ $output := slice }}
+  {{ range (where $.Site.Pages "Type" .Section) }}
+    {{- if and (gt (len .Plain) 0) .Page.IsPage -}}
+        {{ $output = $output | append (dict "url" .Page.Permalink "category" .Page.Params.topic "title" .Title "content" (strings.TrimRight "\"" .Plain | replaceRE "\\\\\"" "\"" | replaceRE "\"\\{" "{" | replaceRE "\\}\"" "}" | replaceRE "\\\\n\"" "") | jsonify (dict "indent" "  ")) }}
+    {{- end -}}
+  {{ end }}
+  {{- delimit $output ","  -}}
+{{ end }}
+
