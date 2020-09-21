@@ -2,6 +2,8 @@
 title: VirtualBox and GNS3
 author: Cumulus Networks
 weight: 30
+product: Cumulus VX
+version: '4.x'
 ---
 
 This section describes how to install and set up Cumulus VX with VirtualBox and GNS3 to create the two leaf and one spine topology shown below.
@@ -21,6 +23,10 @@ The following procedure creates leaf01, leaf02, and spine01 and the network conn
 3. Download the {{<exlink url="https://cumulusnetworks.com/cumulus-vx/download/" text="VirtualBox OVA image">}}.
 
 ### Create VMs in VirtualBox
+
+{{%notice note%}}
+The Cumulus VX OVA image defines the CPU, memory, and disk requirements. Cumulus VX requires at least 768MB of RAM and 6GB of disk space.
+{{%/notice%}}
 
 {{% vx/virtualbox-steps %}}
 
@@ -50,11 +56,17 @@ The following procedure creates leaf01, leaf02, and spine01 and the network conn
 
 ### Create Network Connections
 
-Create the network connections between leaf01, leaf02, and spine01, then start the Vms.
+Create the network connections between leaf01, leaf02, and spine01, as shown in the two leaf, one spine topology {{<link url="VirtualBox-and-GNS3" text="above">}}.
 
-From the GNS3 project window, drag leaf01, leaf02, and spine01 to the console. Select the cable icon from the left pane, then connect the leafs and spine by selecting the network interfaces, as shown in the Topology Summary below. `e1` in GNS3 corresponds to `swp1` in Cumulus VX, `e2` corresponds to `swp2`, and so on.
+1. Click {{< img src="/images/cumulus-vx/icon-show-all-devices.png" height="18" width="18" >}} (Browse all Devices button), then from the `End Devices` panel, drag leaf01, leaf02, and spine01 to the console.
+2. Click the {{< img src="/images/cumulus-vx/icon-cable.png" height="18" width="18" >}} (cable icon), then connect the leafs and spine by selecting the network interfaces, as shown in the Topology Summary below:
+   - `e1` in GNS3 corresponds to `swp1` in Cumulus VX
+   - `e2` in GNS3 corresponds to `swp2` in Cumulus VX
+   - `e3` in GNS3 corresponds to `swp3` in Cumulus VX
 
 {{< img src="/images/cumulus-vx/gns3-network-connections.png" width="500" >}}
+
+3. Start the VMs.
 
 ## Log into the Switches
 

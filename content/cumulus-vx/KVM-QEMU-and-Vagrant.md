@@ -2,19 +2,19 @@
 title: KVM-QEMU and Vagrant
 author: Cumulus Networks
 weight: 20
+product: Cumulus VX
+version: '4.x'
 ---
 Running Cumulus VX with KVM-QEMU and Vagrant requires four components:
 
-- **KVM** works exclusively with QEMU and performs hardware acceleration for x86 VMs with Intel and AMD CPUs. KVM and QEMU are hypervisors that emulate the VMs; the pair is often called KVM-QEMU or just KVM.
-- **QEMU** is a machine emulator that can allow the host machine to emulate the CPU architecture of the guest machine. Because QEMU does not provide hardware acceleration, it works well with KVM.
-- **libvirt** provides an abstraction language to define and launch VMs, but is normally used just to launch single VMs. It uses XML to represent and define the VM.
+{{% vx/kvm-components %}}
 - **Vagrant** is an orchestration tool that makes it easier to manage groups of VMs by interconnecting them programmatically. Vagrant helps to tie all the components together and provides a user-friendly language to launch suites of VMs. Vagrant allows multiple Cumulus VX VMs to be interconnected to simulate a network. Vagrant also allows Cumulus VX VMs to be interconnected with other VMs (such as Ubuntu or CentOS) to emulate real world networks.
 
 This section describes how to install and set up Cumulus VX with KVM-QEMU, Libvirt, and Vagrant on a Linux server to create the two leaf and one spine topology shown below.
 
 {{% vx/intro %}}
 
-These steps were tested with Cumulus VX 4.2, on Ubuntu 20.04 (64-bit) with KVM-QEMU version 4.2.0 (Debian 1:4.2-3ubuntu6.3), Libvirt version 6.0.0, and Vagrant version 2.2.9.
+These steps were tested with Cumulus VX 4.2, KVM/QEMU version 1:4.2-3ubuntu6.3, Libvirt version 6.0.0, and Vagrant version 2.2.9 on Ubuntu Linux version 20.04.
 
 ## Create and Configure the VMs
 
@@ -23,9 +23,7 @@ The following procedure creates leaf01, leaf02, and spine01 and the network conn
 ### Download and Install the Software
 
 {{%notice info%}}
-
 Install Vagrant **after** you install libvirt so that Vagrant can detect all the necessary files.
-
 {{%/notice%}}
 
 1. Run the following commands to install KVM-QEMU and libvirt.
@@ -78,6 +76,11 @@ Install Vagrant **after** you install libvirt so that Vagrant can detect all the
    ```
 
 3. Edit the `Vagrantfile` and replace the contents of the file with the following:
+
+{{%notice note%}}
+- The following is a complete Vagrantfile for the two leaf and one spine example topology. For more information on writing a Vagrantfile, reference the {{% exlink text="Hashicorp Vagrant" url="https://www.vagrantup.com/docs/vagrantfile" %}} documentation.
+- This Vagrantfile defines CPU, memory, and disk requirements for Cumulus VX, which requires at least 768MB of RAM and 6GB of disk space.
+{{%/notice%}}
 
 {{< expand "Vagrantfile" >}}
 
@@ -344,6 +347,10 @@ Install Vagrant **after** you install libvirt so that Vagrant can detect all the
 {{< /expand >}}
 
 4. Run `vagrant up` to start the VMs:
+
+{{%notice note%}}
+KVM starts all Vagrant defined VMs in parallel. In large topologies, this might cause host resource contention issues. Consider starting a subset of VMs at a time using the `vagrant up <hostname> <hostname>` command.
+{{%/notice%}}
 
    ```
    local@host:~/vagrant$ vagrant up
