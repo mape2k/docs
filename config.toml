@@ -11,6 +11,10 @@ noChmod = true
 enableRobotsTXT = true
 disableKinds = ["RSS"]
 
+[outputs]
+  page = ["html", "json"]
+  home = ["html"]
+
 [markup]
   [markup.tableOfContents]
     endLevel = 4
