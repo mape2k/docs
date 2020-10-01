@@ -96,15 +96,19 @@ To configure BGP on a switch, you need to:
 - Assign an ASN to identify this BGP node. In a two-tier leaf and spine configuration, you can use {{<link url="#auto-bgp" text="auto BGP">}}, where Cumulus Linux assigns an ASN automatically. Auto BGP is supported with NCLU only.
 - Assign a router ID, which is a 32-bit value and is typically the address of the loopback interface on the switch.
 - Specify where to distribute routing information by providing the IP address and ASN of the neighbor.
-  - Instead of an IP address, you can specify an interface or BGP peer-group name.
+  - Instead of an IP address, you can specify an interface.
   - Instead of an ASN (a number), you can specify `internal` for a neighbor in the same AS or `external` for a neighbor in a different AS.
 - Specify which prefixes to originate from this BGP node.
 
-The following procedure provides example commands:
+The following procedure provides example commands for two switches, leaf01 and spine01, which are eBPG peers:
 
 {{< tabs "10 ">}}
 
 {{< tab "NCLU Commands ">}}
+
+{{< tabs "109 ">}}
+
+{{< tab " leaf01 ">}}
 
 1. Identify the BGP node by assigning an ASN. Either assign the ASN manually or use auto BGP to assign the ASN automatically.
 
@@ -140,22 +144,26 @@ The following procedure provides example commands:
     cumulus@switch:~$ net add bgp neighbor 10.10.10.101 remote-as external
     ```
 
-    - For an iBGP session, the `remote-as` is the same as the local AS.?????????
-    - Specifying the IP address of the BGP peer allows BGP to set up a TCP socket with this peer. You must specify the `activate` command for the IPv6 address family that is being announced by the BGP session to distribute any prefixes to it. The IPv4 address family is enabled by default and the `activate` command is not required for IPv4 route exchange.
-
-       ```
-       cumulus@switch:~$ net add bgp ipv4 unicast neighbor 10.10.10.101
-       cumulus@switch:~$ net add bgp ipv6 unicast neighbor 2001:db8:0002::0a00:0002 activate
-       ```
+    For an iBGP session, the `remote-as` is the same as the local AS.
 
 4. Specify which prefixes to originate:
 
     ```
-    cumulus@switch:~$ net add bgp ipv4 unicast network 192.0.2.0/24
-    cumulus@switch:~$ net add bgp ipv4 unicast network 203.0.113.1/24
+    cumulus@switch:~$ net add bgp ipv4 unicast network 10.10.10.1/32
+    cumulus@switch:~$ net add bgp ipv4 unicast network 10.1.10.0/24
     cumulus@switch:~$ net pending
     cumulus@switch:~$ net commit
-    ```
+
+   ```
+{{< /tab >}}
+
+{{< tab "spine01 ">}}
+
+ADD CONFIG
+
+{{< /tab >}}
+
+{{< /tabs >}}
 
 {{< /tab >}}
 
@@ -179,20 +187,13 @@ The following procedure provides example commands:
     switch(config-router)# neighbor 10.10.10.101 remote-as external
     ```
 
-    - For an iBGP session, the `remote-as` is the same as the local AS.
-    - Specifying the IP address of the peer allows BGP to set up a TCP socket with this peer. You must specify the `activate` command for the IPv6 address family that is being announced by the BGP session to distribute any prefixes to it. The IPv4 address family is enabled by default and the `activate` command is not required for IPv4 route exchange.
-
-       ```
-       switch(config-router)# address-family ipv6
-       switch(config-router-af)# neighbor 2001:db8:0002::0a00:0002 activate
-       switch(config-router-af)# exit
-       ```
+    For an iBGP session, the `remote-as` is the same as the local AS.
 
 5. Specify which prefixes to originate:
 
     ```
-    switch(config-router-af)# network 192.0.2.0/24
-    switch(config-router-af)# network 203.0.113.1/24
+    switch(config-router-af)# network 10.10.10.1/32
+    switch(config-router-af)# network 10.1.10.0/24
     switch(config-router-af)# exit
     switch(config-router)# exit
     switch(config)# exit
@@ -213,8 +214,8 @@ router bgp 65101
  bgp router-id 10.10.10.1
  neighbor 10.10.10.101 remote-as external
  address-family ipv4 unicast
-  network 192.0.2.0/24
-  network 203.0.113.1/24
+  network 10.10.10.1/32
+  network 10.1.10.0/24
  exit-address-family
 ...
 ```
@@ -331,11 +332,11 @@ When you disable the *bestpath as-path multipath-relax* option, EVPN type-5 rout
 
 ### Route Reflectors
 
+
+
 In a two-tier Clos network, the leaf (or tier 1) switches are the only ones connected to end stations. The spines themselves do not have any routes to announce; they are merely **reflecting** the routes announced by one leaf to the other leafs. Therefore, the spine switches function as route reflectors while the leaf switches serve as route reflector clients.
 
-In a three-tier network, the tier 2 nodes (or mid-tier spines) act as both route reflector servers and route reflector clients. They act as route reflectors because they announce the routes learned from the tier 1 nodes to other tier 1 nodes and to tier 3 nodes. They also act as route reflector clients to the tier 3 nodes, receiving routes learned from other tier 2 nodes. Tier 3 nodes act only as route reflectors.
-
-In the following illustration, tier 2 node spine01 is acting as a route reflector server, announcing the routes between tier 1 nodes leaf01 and leaf02 to tier 1 node leaf03. spine01 is also a route reflector client, learning the routes between tier 2 nodes spine02 and spine03 from the tier 3 node, superspine01.
+In the following illustration, spine01 is acting as a route reflector server, announcing the routes between leaf01 and leaf02 to leaf03.
 
 {{< img src = "/images/cumulus-linux/bgp-route-reflectors-example.png" >}}
 
@@ -393,79 +394,9 @@ For IPv6, when configuring a BGP node to be a route reflector client, you must s
 
 {{%/notice%}}
 
-A **cluster** consists of route reflectors and their clients, and is used in iBGP environments where multiple sets of route reflectors and their clients are configured. Configuring a unique ID per cluster (on the route reflector server and clients) prevents looping as a route reflector does not accept routes from another that has the same cluster ID. Additionally, because all route reflectors in the cluster recognize updates from peers in the same cluster, they do not install routes from a route reflector in the same cluster; this reduces the number of updates that need to be stored in BGP routing tables.
-
-To configure a cluster ID on a route reflector, run the following commands. You can enter the cluster ID as an IP address or as a 32-bit quantity.
-
-{{< tabs "70 ">}}
-
-{{< tab "NCLU Commands ">}}
-
-The following example configures a cluster ID on a route reflector in IP address format:
-
-```
-cumulus@switch:~$ net add bgp cluster-id 14.0.0.9
-cumulus@switch:~$ net pending
-cumulus@switch:~$ net commit
-```
-
-The following example configures a cluster ID on a route reflector as a 32-bit quantity:
-
-```
-cumulus@switch:~$ net add bgp cluster-id 321
-cumulus@switch:~$ net pending
-cumulus@switch:~$ net commit
-```
-
-{{< /tab >}}
-
-{{< tab "vtysh Commands ">}}
-
-The following example configures a cluster ID on a route reflector in IP address format:
-
-```
-cumulus@switch:~$ sudo vtysh
-
-switch# configure terminal
-switch(config)# router bgp 65199
-switch(config-router)# bgp cluster-id 14.0.0.9
-switch(config-router)# end
-switch# write memory
-switch# exit
-cumulus@switch:~$
-```
-
-The following example configures a cluster ID on a route reflector as a 32-bit quantity:
-
-```
-cumulus@switch:~$ sudo vtysh
-
-switch# configure terminal
-switch(config)# router bgp 65199
-switch(config-router)# bgp cluster-id 321
-switch(config-router)# end
-switch# write memory
-switch# exit
-cumulus@switch:~$
-```
-
-{{< /tab >}}
-
-{{< /tabs >}}
-
-The NCLU and vtysh commands save the configuration in the `/etc/frr/frr.conf` file. For example:
-
-```
-...
-router bgp 65199
-  bgp router-id 10.10.10.101
-  bgp cluster-id 321
-...
-```
-
 ### Unnumbered Interfaces
 
-Unnumbered interfaces are interfaces without unique IP addresses. In BGP, you configure unnumbered interfaces using *extended next hop encoding* (ENHE), which is defined by {{<exlink url="https://tools.ietf.org/html/rfc5549" text="RFC 5549">}}. BGP unnumbered interfaces provide a means of advertising an IPv4 route with an IPv6 next hop. Prior to RFC 5549, an IPv4 route could be advertised only with an IPv4 next hop.
+Unnumbered interfaces are interfaces without unique IP addresses. In BGP, you configure unnumbered interfaces using *extended next hop encoding* (ENHE), which is defined by {{<exlink url="https://tools.ietf.org/html/rfc5549" text="RFC 5549">}}. BGP unnumbered interfaces enables you to advertise an IPv4 route with an IPv6 next hop.
 
 BGP unnumbered interfaces are useful in deployments where IPv4 prefixes are advertised through BGP over a section without any IPv4 address configuration on links. As a result, the routing entries are also IPv4 for destination lookup and have IPv6 next hops for forwarding purposes.
 
@@ -1123,7 +1054,7 @@ cumulus@switch:~$ net add bgp listen limit 5
 Collectively, a sample configuration for IPv4 looks like this:
 
 ```
-cumulus@switch:~$ net add bgp autonomous-system 65001
+cumulus@switch:~$ net add bgp autonomous-system 65101
 cumulus@switch:~$ net add bgp neighbor SPINE peer-group
 cumulus@switch:~$ net add bgp neighbor SPINE remote-as 65000
 cumulus@switch:~$ net add bgp listen limit 5
@@ -3252,7 +3183,7 @@ FRR does not add BGP `ttl-security` to either the running configuration or to th
 
 ## Related Information
 
-{{<exlink url="https://tools.ietf.org/html/rfc7938" text="RFC 7938">}} provides further details of the use of BGP within the data center
+- {{<exlink url="https://tools.ietf.org/html/rfc7938" text="RFC 7938">}} provides further details of the use of BGP within the data center
 - {{<exlink url="https://cumulusnetworks.com/lp/bgp-ebook/" text="BGP in the Data Center by Dinesh G. Dutt">}} - a complete guide to Border Gateway Protocol for the modern data center
 - {{<link url="Bidirectional-Forwarding-Detection-BFD" text="Bidirectional forwarding detection">}} (BFD) and BGP
 - {{<exlink url="http://en.wikipedia.org/wiki/Border_Gateway_Protocol" text="Wikipedia entry for BGP">}} (includes list of useful RFCs)
