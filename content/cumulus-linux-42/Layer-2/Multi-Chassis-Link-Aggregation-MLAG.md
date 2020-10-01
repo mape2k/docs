@@ -596,7 +596,7 @@ cumulus@switch:~$ sudo ifreload -a
 
 ### STP and MLAG
 
-Cumulus Networks recommends that you always enable STP in your layer 2 network and that you enable {{<link url="Spanning-Tree-and-Rapid-Spanning-Tree-STP#bpdu-guard" text="BPDU Guard">}} on the host-facing bond interfaces.
+Cumulus Networks recommends that you always enable STP in your layer 2 network and that you enable {{<link title="Spanning Tree and Rapid Spanning Tree - STP#bpdu-guard" text="BPDU Guard">}} on the host-facing bond interfaces.
 
 - The STP global configuration must be the same on both peer switches.
 - The STP configuration for dual-connected ports must be the same on both peer switches.
@@ -930,10 +930,10 @@ auto swp1
 iface swp1
     alias leaf to spine
 
-auto swp2
-iface swp2
-    alias leaf to spine
-```
+- The STP global configuration must be the same on both peer switches.
+- The STP configuration for dual-connected ports must be the same on both peer switches.
+- The STP priority must be the same on both peer switches.
+- To minimize convergence times when a link transitions to the forwarding state, configure the edge ports (for tagged and untagged frames) with PortAdminEdge and BPDU guard enabled.
 
 {{< /tab >}}
 
