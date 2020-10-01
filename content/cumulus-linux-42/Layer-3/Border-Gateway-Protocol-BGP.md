@@ -226,174 +226,6 @@ When using auto BGP, there are no references to `leaf` or `spine` in the configu
 
 {{%/notice%}}
 
-## Optional Configuration
-
-This section describes optional configuration procedures.
-
-### ECMP Options
-
-BGP supports equal-cost multipathing (ECMP). If a BGP node hears a certain prefix from multiple peers, it has all the information necessary to program the routing table and forward traffic for that prefix through all of these peers. BGP typically choses one best path for each prefix and installs that route in the forwarding table.
-
-In Cumulus Linux, the *BGP multipath* option is enabled by default with the maximum number of paths set to 64 so that the switch can install multiple equal-cost BGP paths to the forwarding table and load balance traffic across multiple links.
-
-To change the number of paths allowed, run the following commands. The example commands change the maximum number of paths to 120. You can set a value between 1 and 256. 1 disables the BGP multipath option.
-
-{{< tabs "297 ">}}
-
-{{< tab "NCLU Commands ">}}
-
-```
-cumulus@switch:~$ net add bgp maximum-paths 120
-cumulus@switch:~$ net pending
-cumulus@switch:~$ net commit
-```
-
-{{< /tab >}}
-
-{{< tab "vtysh Commands ">}}
-
-```
-cumulus@switch:~$ sudo vtysh
-
-switch# configure terminal
-switch(config)# router bgp 65101
-switch(config-router)# address-family ipv4
-switch(config-router-af)# maximum-paths 120
-switch(config-router-af)# end
-switch# write memory
-switch# exit
-cumulus@switch:~$
-```
-
-{{< /tab >}}
-
-{{< /tabs >}}
-
-The NCLU and vtysh commands save the configuration in the `address-family` stanza of the `/etc/frr/frr.conf` file. For example:
-
-```
-...
-!
-address-family ipv4 unicast
- network 192.0.2.0/24
- network 203.0.113.1/24
- maximum-paths 120
-exit-address-family
-...
-```
-
-When *BGP multipath* is enabled, only BGP routes from the same AS are load balanced. If the routes go across several different AS neighbors, even if the AS path length is same, they are not load balanced. To be able to load balance between multiple paths received from different AS neighbors, you need to set the *bestpath as-path multipath-relax* option.
-
-{{< tabs "12 ">}}
-
-{{< tab "NCLU Commands ">}}
-
-```
-cumulus@switch:~$ net add bgp bestpath as-path multipath-relax
-cumulus@switch:~$ net pending
-cumulus@switch:~$ net commit
-```
-
-{{< /tab >}}
-
-{{< tab "vtysh Commands ">}}
-
-```
-cumulus@switch:~$ sudo vtysh
-
-switch# configure terminal
-switch(config)# router bgp 65101
-switch(config-router)# bgp bestpath as-path multipath-relax
-switch(config-router)# end
-switch# write memory
-switch# exit
-cumulus@switch:~$
-```
-
-{{< /tab >}}
-
-{{< /tabs >}}
-
-The NCLU and vtysh commands save the configuration in the `/etc/frr/frr.conf` file. For example:
-
-```
-...
-router bgp 65101
-  bgp router-id 10.0.0.1
-  bgp bestpath as-path multipath-relax
-...
-```
-
-{{%notice note%}}
-
-When you disable the *bestpath as-path multipath-relax* option, EVPN type-5 routes do not use the updated configuration. Type-5 routes continue to use all available ECMP paths in the underlay fabric, regardless of ASN.
-
-{{%/notice%}}
-
-### Route Reflectors
-
-
-
-In a two-tier Clos network, the leaf (or tier 1) switches are the only ones connected to end stations. The spines themselves do not have any routes to announce; they are merely **reflecting** the routes announced by one leaf to the other leafs. Therefore, the spine switches function as route reflectors while the leaf switches serve as route reflector clients.
-
-In the following illustration, spine01 is acting as a route reflector server, announcing the routes between leaf01 and leaf02 to leaf03.
-
-{{< img src = "/images/cumulus-linux/bgp-route-reflectors-example.png" >}}
-
-To configure the BGP node as a route reflector client, set the `route-reflector-client` option. The following example sets spine01 shown in the illustration above to be a route reflector client for spine02:
-
-{{< tabs "344 ">}}
-
-{{< tab "NCLU Commands ">}}
-
-```
-cumulus@switchRR:~$ net add bgp neighbor 10.10.10.102 route-reflector-client
-cumulus@switchRR:~$ net pending
-cumulus@switchRR:~$ net commit
-```
-
-{{< /tab >}}
-
-{{< tab "vtysh Commands ">}}
-
-```
-cumulus@switch:~$ sudo vtysh
-
-switch# configure terminal
-switch(config)# router bgp 65199
-switch(config-router)# address-family ipv4
-switch(config-router-af)# neighbor 10.10.10.102 route-reflector-client
-switch(config-router-af)# end
-switch# write memory
-switch# exit
-cumulus@switch:~$
-```
-
-{{< /tab >}}
-
-{{< /tabs >}}
-
-The NCLU and vtysh commands save the configuration in the `/etc/frr/frr.conf` file. For example:
-
-```
-...
-router bgp 65199
- bgp router-id 10.10.10.101
- neighbor 10.10.10.102 remote-as internal
- !
- address-family ipv4 unicast
-  network 192.0.2.0/24
-  neighbor 10.10.10.102 route-reflector-client
- exit-address-family
-...
-```
-
-{{%notice info%}}
-
-For IPv6, when configuring a BGP node to be a route reflector client, you must specify the configuration commands in a specific order. You must run the `route-reflector-client` command **after** the `activate` command; otherwise, the `route-reflector-client` command is ignored.
-
-{{%/notice%}}
-
 ### Unnumbered Interfaces
 
 Unnumbered interfaces are interfaces without unique IP addresses. In BGP, you configure unnumbered interfaces using *extended next hop encoding* (ENHE), which is defined by {{<exlink url="https://tools.ietf.org/html/rfc5549" text="RFC 5549">}}. BGP unnumbered interfaces enables you to advertise an IPv4 route with an IPv6 next hop.
@@ -554,6 +386,172 @@ If this address is a link-local IPv6 address, it is reset so that the link-local
 The above rules imply that there are scenarios where a generated update has two IPv6 next hops, and both of them are the IPv6 link-local address of the peering interface on the local system. If you are peering with a switch or router that is not running Cumulus Linux and expects the first next hop to be a global IPv6 address, a route map can be used on the sender to specify a global IPv6 address. This conforms with the recommendations in the Internet draft {{<exlink url="https://tools.ietf.org/html/draft-kato-bgp-ipv6-link-local-00" text="draft-kato-bgp-ipv6-link-local-00.txt">}}, "BGP4+ Peering Using IPv6 Link-local Address."
 
 {{< /expand >}}
+
+## Optional Configuration
+
+This section describes optional configuration procedures.
+
+### ECMP
+
+BGP supports equal-cost multipathing (ECMP). If a BGP node hears a certain prefix from multiple peers, it has all the information necessary to program the routing table and forward traffic for that prefix through all of these peers. BGP typically choses one best path for each prefix and installs that route in the forwarding table.
+
+In Cumulus Linux, the *BGP multipath* option is enabled by default with the maximum number of paths set to 64 so that the switch can install multiple equal-cost BGP paths to the forwarding table and load balance traffic across multiple links.
+
+To change the number of paths allowed, run the following commands. The example commands change the maximum number of paths to 120. You can set a value between 1 and 256. 1 disables the BGP multipath option.
+
+{{< tabs "297 ">}}
+
+{{< tab "NCLU Commands ">}}
+
+```
+cumulus@switch:~$ net add bgp maximum-paths 120
+cumulus@switch:~$ net pending
+cumulus@switch:~$ net commit
+```
+
+{{< /tab >}}
+
+{{< tab "vtysh Commands ">}}
+
+```
+cumulus@switch:~$ sudo vtysh
+
+switch# configure terminal
+switch(config)# router bgp 65101
+switch(config-router)# address-family ipv4
+switch(config-router-af)# maximum-paths 120
+switch(config-router-af)# end
+switch# write memory
+switch# exit
+cumulus@switch:~$
+```
+
+{{< /tab >}}
+
+{{< /tabs >}}
+
+The NCLU and vtysh commands save the configuration in the `address-family` stanza of the `/etc/frr/frr.conf` file. For example:
+
+```
+...
+!
+address-family ipv4 unicast
+ network 192.0.2.0/24
+ network 203.0.113.1/24
+ maximum-paths 120
+exit-address-family
+...
+```
+
+When *BGP multipath* is enabled, only BGP routes from the same AS are load balanced. If the routes go across several different AS neighbors, even if the AS path length is same, they are not load balanced. To be able to load balance between multiple paths received from different AS neighbors, you need to set the *bestpath as-path multipath-relax* option.
+
+{{< tabs "12 ">}}
+
+{{< tab "NCLU Commands ">}}
+
+```
+cumulus@switch:~$ net add bgp bestpath as-path multipath-relax
+cumulus@switch:~$ net pending
+cumulus@switch:~$ net commit
+```
+
+{{< /tab >}}
+
+{{< tab "vtysh Commands ">}}
+
+```
+cumulus@switch:~$ sudo vtysh
+
+switch# configure terminal
+switch(config)# router bgp 65101
+switch(config-router)# bgp bestpath as-path multipath-relax
+switch(config-router)# end
+switch# write memory
+switch# exit
+cumulus@switch:~$
+```
+
+{{< /tab >}}
+
+{{< /tabs >}}
+
+The NCLU and vtysh commands save the configuration in the `/etc/frr/frr.conf` file. For example:
+
+```
+...
+router bgp 65101
+  bgp router-id 10.0.0.1
+  bgp bestpath as-path multipath-relax
+...
+```
+
+{{%notice note%}}
+
+When you disable the *bestpath as-path multipath-relax* option, EVPN type-5 routes do not use the updated configuration. Type-5 routes continue to use all available ECMP paths in the underlay fabric, regardless of ASN.
+
+{{%/notice%}}
+
+### Route Reflectors
+
+iBGP rules state that a route learned from an iBGP peer can not be sent to another iBGP peer. In a datacenter spine and leaf network using iBGP, this prevents a spine from sending a route learned from a leaf to any other leaf. As a workaround, BGP introduced the concept of a *route reflector* that selectively violates this iBGP “split-horizon” rule. When an iBGP speaker is configured as a route reflector, it *can* send iBGP learned routes to other iBGP peers.
+
+In the following example, spine01 is acting as a route reflector. The leaf switches, leaf01, leaf02 and leaf03 are *route reflector clients*. Any route that spine01 learns from a route reflector client is sent to other route reflector clients.
+
+{{< img src = "/images/cumulus-linux/bgp-route-reflectors-example.png" >}}
+
+To configure the BGP node as a route reflector, set the `route-reflector-client` option. The following example sets spine01 shown in the illustration above to be a route reflector:
+
+{{< tabs "344 ">}}
+
+{{< tab "NCLU Commands ">}}
+
+```
+cumulus@switchRR:~$ net add bgp neighbor 10.10.10.1 route-reflector-client
+cumulus@switchRR:~$ net pending
+cumulus@switchRR:~$ net commit
+```
+
+{{< /tab >}}
+
+{{< tab "vtysh Commands ">}}
+
+```
+cumulus@switch:~$ sudo vtysh
+
+switch# configure terminal
+switch(config)# router bgp 65199
+switch(config-router)# address-family ipv4
+switch(config-router-af)# neighbor 10.10.10.1 route-reflector-client
+switch(config-router-af)# end
+switch# write memory
+switch# exit
+cumulus@switch:~$
+```
+
+{{< /tab >}}
+
+{{< /tabs >}}
+
+The NCLU and vtysh commands save the configuration in the `/etc/frr/frr.conf` file. For example:
+
+```
+...
+router bgp 65199
+ bgp router-id 10.10.10.101
+ neighbor 10.10.10.1 remote-as external
+ !
+ address-family ipv4 unicast
+  network 192.0.2.0/24
+  neighbor 10.10.10.1 route-reflector-client
+ exit-address-family
+...
+```
+
+{{%notice info%}}
+
+For IPv6, when configuring a BGP node to be a route reflector client, you must specify the configuration commands in a specific order. You must run the `route-reflector-client` command **after** the `activate` command; otherwise, the `route-reflector-client` command is ignored.
+
+{{%/notice%}}
 
 ### Advertise IPv4 prefixes with IPv6 Next Hops
 
@@ -1270,77 +1268,78 @@ To manually configure an MD5-enabled BGP neighbor:
 
 {{< tab "NCLU Commands ">}}
 
-1. From leaf01, configure the password for the neighbor:
+From leaf01, configure the password for the neighbor:
 
-    ```
-    cumulus@leaf01:~$ net add bgp neighbor 10.10.10.101 password mypassword
-    ```
+{{< tabs "1273 ">}}
 
-2. Confirm the configuration with the `net show bgp summary` command. For example:
+{{< tab "leaf01 ">}}
 
-    ```
-    cumulus@leaf01:~$ net show bgp summary
-    show bgp ipv4 unicast summary
-    =============================
-    BGP router identifier 10.10.10.1, local AS number 65101 vrf-id 0
-    BGP table version 18
-    RIB entries 11, using 1320 bytes of memory
-    Peers 2, using 36 KiB of memory
-    Peer groups 1, using 56 bytes of memory
-    Neighbor        V         AS     MsgRcvd  MsgSent   TblVer  InQ  OutQ     Up/Down  State/PfxRcd
-    spine01(swp51)  4 65020   96144    96146        0        0    0  00:30:29                   3
-    spine02(swp52)  4 65020   96209    96217        0        0    0  1d02h44m                   3
-    Total number of neighbors 2
+```
+cumulus@leaf01:~$ net add bgp neighbor 10.10.10.101 password mypassword
+cumulus@leaf01:~$ net pending
+cumulus@leaf01:~$ net commit
+```
 
-    show bgp ipv6 unicast summary
-    =============================
-    No IPv6 neighbor is configured
-    ```
+{{< /tab >}}
 
-3. From spine01, configure the password for the neighbor:
+{{< tab "spine01 ">}}
 
-    ```
-    cumulus@spine01:~$ net add bgp neighbor 10.10.10.102 password mypassword
-    cumulus@spine01:~$ net pending
-    cumulus@spine01:~$ net commit
-    ```
+```
+cumulus@spine01:~$ net add bgp neighbor 10.10.10.102 password mypassword
+cumulus@spine01:~$ net pending
+cumulus@spine01:~$ net commit
+```
 
-4. Confirm the configuration with the `net show bgp summary` command.
+{{< /tab >}}
+
+{{< /tabs >}}
+
+Confirm the configuration with the `net show bgp neighbor <ip-address>|<interface>` command.
 
 {{< /tab >}}
 
 {{< tab "vtysh Commands ">}}
 
-1. From leaf01, configure the password for the neighbor:
+From leaf01, configure the password for the neighbor:
 
-    ```
-    cumulus@leaf01:~$ sudo vtysh
+{{< tabs "1295 ">}}
 
-    leaf01# configure terminal
-    leaf01(config)# router bgp 65101
-    leaf01(config-router)# neighbor 10.10.10.101 password mypassword
-    leaf01(config-router)# exit
-    leaf01(config)# exit
-    leaf01# write memory
-    leaf01# exit
-    cumulus@leaf01:~$
-    ```
+{{< tab "leaf01 ">}}
 
-2. From spine01, configure the password for the neighbor:
+```
+cumulus@leaf01:~$ sudo vtysh
 
-    ```
-    cumulus@spine01:~$ sudo vtysh
+leaf01# configure terminal
+leaf01(config)# router bgp 65101
+leaf01(config-router)# neighbor 10.10.10.101 password mypassword
+leaf01(config-router)# exit
+leaf01(config)# exit
+leaf01# write memory
+leaf01# exit
+cumulus@leaf01:~$
+```
 
-    spine01# configure terminal
-    spine01(config)# router bgp 65199
-    spine01(config-router)# neighbor 10.10.10.102 password mypassword
-    spine01(config-router)# end
-    spine01# write memory
-    spine01# exit
-    cumulus@spine01:~$
-    ```
+{{< /tab >}}
 
-3. Confirm the configuration with the `show ip` `bgp summary` command.
+{{< tab "spine01 ">}}
+
+```
+cumulus@spine01:~$ sudo vtysh
+
+spine01# configure terminal
+spine01(config)# router bgp 65199
+spine01(config-router)# neighbor 10.10.10.102 password mypassword
+spine01(config-router)# end
+spine01# write memory
+spine01# exit
+cumulus@spine01:~$
+```
+
+{{< /tab >}}
+
+{{< /tabs >}}
+
+Confirm the configuration with the `show ip` `bgp summary` command.
 
 {{< /tab >}}
 
