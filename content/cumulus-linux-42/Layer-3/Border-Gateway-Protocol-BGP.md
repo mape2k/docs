@@ -155,6 +155,7 @@ The following procedure provides example commands for two switches, leaf01 and s
     cumulus@switch:~$ net commit
 
    ```
+
 {{< /tab >}}
 
 {{< tab "spine01 ">}}
@@ -243,8 +244,6 @@ When enabled and active, BGP makes use of the available IPv6 next hops for adver
 
 {{%/notice%}}
 
-To configure a BGP unnumbered interface, you must enable IPv6 neighbor discovery router advertisements. The `interval` you specify is measured in seconds and defaults to 10 seconds.
-
 The following example commands show how to configure a BGP unnumbered interface.
 
 {{< tabs "14 ">}}
@@ -254,8 +253,6 @@ The following example commands show how to configure a BGP unnumbered interface.
 ```
 cumulus@switch:~$ net add bgp autonomous-system 65101
 cumulus@switch:~$ net add bgp router-id 10.10.10.1
-cumulus@switch:~$ net add bgp bestpath as-path multipath-relax
-cumulus@switch:~$ net add bgp bestpath compare-routerid
 cumulus@switch:~$ net add bgp neighbor fabric peer-group
 cumulus@switch:~$ net add bgp neighbor fabric remote-as external
 cumulus@switch:~$ net add bgp neighbor fabric description Internal Fabric Network
@@ -306,8 +303,6 @@ The NCLU and vtysh commands save the configuration in the `/etc/frr/frr.conf` fi
 ...
 router bgp 65101
   bgp router-id 10.10.10.1
-  bgp bestpath as-path multipath-relax
-  bgp bestpath compare-routerid
   neighbor fabric peer-group
   neighbor fabric remote-as external
   neighbor fabric description Internal Fabric Network
@@ -552,6 +547,10 @@ router bgp 65199
 For IPv6, when configuring a BGP node to be a route reflector client, you must specify the configuration commands in a specific order. You must run the `route-reflector-client` command **after** the `activate` command; otherwise, the `route-reflector-client` command is ignored.
 
 {{%/notice%}}
+
+### IPv6 Neighbors
+
+ADD
 
 ### Advertise IPv4 prefixes with IPv6 Next Hops
 
@@ -1097,185 +1096,24 @@ router bgp 65001
   bgp listen range 10.1.1.0/24 peer-group SPINE
 ```
 
-### Configure BGP Peering Relationships across Switches
-
-A BGP peering relationship is typically initiated with the `neighbor x.x.x.x remote-as [internal|external]` command.
-
-Specifying *internal* signifies an iBGP peering; that is, the neighbor only creates or accepts a connection with the specified neighbor if the remote peer AS number matches this BGP AS number.
-
-Specifying *external* signifies an eBGP peering; that is, the neighbor will only create a connection with the neighbor if the remote peer AS number does **not** match this BGP AS number.
-
-You can make this distinction using the `neighbor` command or the `peer-group` command.
-
-In general, use the following syntax with the `neighbor` command:
-
-{{< tabs "38 ">}}
-
-{{< tab "NCLU Commands ">}}
-
-For example, to connect to **the same AS** using the `neighbor` command:
-
-```
-cumulus@switch:~$ net add bgp autonomous-system 500
-cumulus@switch:~$ net add bgp neighbor 192.168.1.2 remote-as internal
-cumulus@switch:~$ net pending
-cumulus@switch:~$ net commit
-```
-
-These commands create the following configuration snippet:
-
-```
-...
-router bgp 500
-  neighbor 192.168.1.2 remote-as internal
-...
-```
-
-To connect to a **different AS** using the `neighbor` command:
-
-```
-cumulus@switch:~$ net add bgp autonomous-system 500
-cumulus@switch:~$ net add bgp neighbor 192.168.1.2 remote-as external
-cumulus@switch:~$ net pending
-cumulus@switch:~$ net commit
-```
-
-These commands create the following configuration snippet:
-
-```
-...
-router bgp 500
-  neighbor 192.168.1.2 remote-as external
-...
-```
-
-To connect to **the same AS** using the `peer-group` command:
-
-```
-cumulus@switch:~$ net add bgp autonomous-system 500
-cumulus@switch:~$ net add bgp neighbor swp1 interface
-cumulus@switch:~$ net add bgp neighbor IBGP peer-group
-cumulus@switch:~$ net add bgp neighbor IBGP remote-as internal
-cumulus@switch:~$ net add bgp neighbor swp1 interface peer-group IBGP
-cumulus@switch:~$ net add bgp neighbor 192.0.2.3 peer-group IBGP
-cumulus@switch:~$ net add bgp neighbor 192.0.2.4 peer-group IBGP
-cumulus@switch:~$ net pending
-cumulus@switch:~$ net commit
-```
-
-These commands create the following configuration snippet:
-
-```
-...
-router bgp 500
-  neighbor swp1 interface
-  neighbor IBGP peer-group
-  neighbor IBGP remote-as internal
-  neighbor swp1 peer-group IBGP
-  neighbor 192.0.2.3 peer-group IBGP
-  neighbor 192.0.2.4 peer-group IBGP
-...
-```
-
-To connect to a **different AS** using the `peer-group` command:
-
-```
-cumulus@switch:~$ net add bgp autonomous-system 500
-cumulus@switch:~$ net add bgp neighbor swp2 interface
-cumulus@switch:~$ net add bgp neighbor EBGP peer-group
-cumulus@switch:~$ net add bgp neighbor EBGP remote-as external
-cumulus@switch:~$ net add bgp neighbor 192.0.2.2 peer-group EBGP
-cumulus@switch:~$ net add bgp neighbor swp2 interface peer-group EBGP
-cumulus@switch:~$ net add bgp neighbor 192.0.2.4 peer-group EBGP
-cumulus@switch:~$ net pending
-cumulus@switch:~$ net commit
-```
-
-These commands create the following configuration snippet:
-
-```
-...
-router bgp 500
-  neighbor swp2 interface
-  neighbor EBGP peer-group
-  neighbor EBGP remote-as external
-  neighbor 192.0.2.2 peer-group EBGP
-  neighbor swp2 peer-group EBGP
-  neighbor 192.0.2.4 peer-group EBGP
-...
-```
-
-{{< /tab >}}
-
-{{< tab "vtysh Commands ">}}
-
-To connect to **the same AS** using the `neighbor` command:
-
-```
-cumulus@switch:~$ sudo vtysh
-
-switch# configure terminal
-switch(config)# router bgp 500
-switch(config-router)# neighbor 192.168.1.2 remote-as internal
-switch(config-router)# end
-switch# write memory
-switch# exit
-cumulus@switch:~$
-```
-
-To connect to a **different AS** using the `neighbor` command:
-
-```
-switch(config)# router bgp 500
-switch(config-router)# neighbor 192.168.1.2 remote-as external
-```
-
-To connect to **the same AS** using the `peer-group` command:
-
-```
-switch(config)# router bgp 500
-switch(config-router)# neighbor swp1 interface
-switch(config-router)# neighbor IBGP peer-group
-switch(config-router)# neighbor IBGP remote-as internal
-switch(config-router)# neighbor swp1 peer-group IBGP
-switch(config-router)# neighbor 192.0.2.3 peer-group IBGP
-switch(config-router)# neighbor 192.0.2.4 peer-group IBGP
-```
-
-To connect to a **different AS** using the `peer-group` command:
-
-```
-switch(config)# router bgp 500
-switch(config-router)# neighbor swp2 interface
-switch(config-router)# neighbor EBGP peer-group
-switch(config-router)# neighbor EBGP remote-as external
-switch(config-router)# neighbor 192.0.2.2 peer-group EBGP
-switch(config-router)# neighbor swp2 peer-group EBGP
-switch(config-router)# neighbor 192.0.2.4 peer-group EBGP
-```
-
-{{< /tab >}}
-
-{{< /tabs >}}
-
 ### Configure MD5-enabled BGP Neighbors
 
-The following sections outline how to configure an MD5-enabled BGP neighbor. Each process assumes that FRRouting is used as the routing platform, and consists of two switches (`AS 65101` and `AS 65020`), connected by the link 10.0.0.100/30.
+You can authenticate your BGP peer connection to prevent interference with your routing tables.
 
-To manually configure an MD5-enabled BGP neighbor:
+To enable MD5 authentication for BGP peers, set the same password on the each peer.
+
+The following example commands set the password *mypassword* on BGP peers leaf01 and spine01:
 
 {{< tabs "40 ">}}
 
 {{< tab "NCLU Commands ">}}
-
-From leaf01, configure the password for the neighbor:
 
 {{< tabs "1273 ">}}
 
 {{< tab "leaf01 ">}}
 
 ```
-cumulus@leaf01:~$ net add bgp neighbor 10.10.10.101 password mypassword
+cumulus@leaf01:~$ net add bgp neighbor swp51 password mypassword
 cumulus@leaf01:~$ net pending
 cumulus@leaf01:~$ net commit
 ```
@@ -1285,7 +1123,7 @@ cumulus@leaf01:~$ net commit
 {{< tab "spine01 ">}}
 
 ```
-cumulus@spine01:~$ net add bgp neighbor 10.10.10.102 password mypassword
+cumulus@spine01:~$ net add bgp neighbor swp1 password mypassword
 cumulus@spine01:~$ net pending
 cumulus@spine01:~$ net commit
 ```
@@ -1294,13 +1132,9 @@ cumulus@spine01:~$ net commit
 
 {{< /tabs >}}
 
-Confirm the configuration with the `net show bgp neighbor <ip-address>|<interface>` command.
-
 {{< /tab >}}
 
 {{< tab "vtysh Commands ">}}
-
-From leaf01, configure the password for the neighbor:
 
 {{< tabs "1295 ">}}
 
@@ -1311,7 +1145,7 @@ cumulus@leaf01:~$ sudo vtysh
 
 leaf01# configure terminal
 leaf01(config)# router bgp 65101
-leaf01(config-router)# neighbor 10.10.10.101 password mypassword
+leaf01(config-router)# neighbor swp51 password mypassword
 leaf01(config-router)# exit
 leaf01(config)# exit
 leaf01# write memory
@@ -1328,7 +1162,7 @@ cumulus@spine01:~$ sudo vtysh
 
 spine01# configure terminal
 spine01(config)# router bgp 65199
-spine01(config-router)# neighbor 10.10.10.102 password mypassword
+spine01(config-router)# neighbor swp1 password mypassword
 spine01(config-router)# end
 spine01# write memory
 spine01# exit
@@ -1339,11 +1173,63 @@ cumulus@spine01:~$
 
 {{< /tabs >}}
 
-Confirm the configuration with the `show ip` `bgp summary` command.
-
 {{< /tab >}}
 
 {{< /tabs >}}
+
+You can confirm the configuration with the NCLU `net show bgp neighbor` command or the with the vtysh  `show ip bgp neighbor` command. The following example :
+
+```
+cumulus@spine01:~$ net show bgp neighbor swp1
+BGP neighbor on swp1: fe80::2294:15ff:fe02:7bbf, remote AS 65101, local AS 65199, external link
+Hostname: leaf01
+  BGP version 4, remote router ID 10.10.10.1, local router ID 10.10.10.101
+  BGP state = Established, up for 00:00:39
+  Last read 00:00:00, Last write 00:00:00
+  Hold time is 9, keepalive interval is 3 seconds
+  Neighbor capabilities:
+    4 Byte AS: advertised and received
+    AddPath:
+      IPv4 Unicast: RX advertised IPv4 Unicast and received
+    Route refresh: advertised and received(old & new)
+    Address Family IPv4 Unicast: advertised and received
+    Hostname Capability: advertised (name: spine01,domain name: n/a) received (name: leaf01,domain name: n/a)
+    Graceful Restart Capability: advertised and received
+      Remote Restart timer is 120 seconds
+      Address families by peer:
+        none
+  Graceful restart information:
+    End-of-RIB send: IPv4 Unicast
+    End-of-RIB received: IPv4 Unicast
+  Message statistics:
+    Inq depth is 0
+    Outq depth is 0
+                         Sent       Rcvd
+    Opens:                  2          2
+    Notifications:          0          2
+    Updates:              424        369
+    Keepalives:           633        633
+    Route Refresh:          0          0
+    Capability:             0          0
+    Total:               1059       1006
+  Minimum time between advertisement runs is 0 seconds
+  For address family: IPv4 Unicast
+  Update group 1, subgroup 1
+  Packet Queue length 0
+  Community attribute sent to this neighbor(all)
+  3 accepted prefixes
+  Connections established 2; dropped 1
+  Last reset 00:02:37,   Notification received (Cease/Other Configuration Change)
+Local host: fe80::7c41:fff:fe93:b711, Local port: 45586
+Foreign host: fe80::2294:15ff:fe02:7bbf, Foreign port: 179
+Nexthop: 10.10.10.101
+Nexthop global: fe80::7c41:fff:fe93:b711
+Nexthop local: fe80::7c41:fff:fe93:b711
+BGP connection: shared network
+BGP Connect Retry Timer in Seconds: 10
+Peer Authentication Enabled
+Read thread: on  Write thread: on  FD used: 27
+```
 
 {{%notice note%}}
 
@@ -1362,8 +1248,8 @@ To establish a connection between two eBGP peers that are not directly connected
 {{< tab "NCLU Commands ">}}
 
 ```
-cumulus@switch:~$ net add bgp neighbor <ip-address> remote-as external
-cumulus@switch:~$ net add bgp neighbor <ip-address> ebgp-multihop
+cumulus@switch:~$ net add bgp neighbor 10.10.10.103 remote-as external
+cumulus@switch:~$ net add bgp neighbor 10.10.10.103 ebgp-multihop
 ```
 
 {{< /tab >}}
@@ -1375,8 +1261,8 @@ cumulus@spine01:~$ sudo vtysh
 
 spine01# configure terminal
 spine01(config)# router bgp 65199
-spine01(config-router)# neighbor <p-address> remote-as external
-spine01(config-router)# neighbor <p-address> ebgp-multihop
+spine01(config-router)# neighbor 10.10.10.103 remote-as external
+spine01(config-router)# neighbor 10.10.10.103 ebgp-multihop
 spine01(config)# exit
 spine01# write memory
 spine01# exit
@@ -1971,70 +1857,7 @@ cumulus@switch:~$
 
 {{< /tab >}}
 
-{{< /tabs >}}
-
-### Peer Groups
-
-When a switch has many peers to connect to, the amount of redundant configuration becomes overwhelming. For example, repeating the `activate` and `next-hop-self` commands for even 60 neighbors makes for a very long configuration file. To address this problem, you can use
-`peer-group`.
-
-Instead of specifying properties of each individual peer, FRRouting allows you to define one or more peer groups and associate all the attributes common to that peer session to a peer group. A peer needs to be attached to a peer group only once, when it then inherits all address families activated for that peer group.
-
-After you attach a peer to a peer group, you need to associate an IP address with the peer group. The following example shows how to define and use peer groups:
-
-{{< tabs "34 ">}}
-
-{{< tab "NCLU Commands ">}}
-
-```
-cumulus@switch:~$ net add bgp neighbor tier-2 peer-group
-cumulus@switch:~$ net add bgp neighbor tier-2 next-hop-self
-cumulus@switch:~$ net add bgp neighbor 10.0.0.2 peer-group tier-2
-cumulus@switch:~$ net add bgp neighbor 192.0.2.2 peer-group tier-2
-```
-
-{{< /tab >}}
-
-{{< tab "vtysh Commands ">}}
-
-```
-cumulus@switch:~$ sudo vtysh
-
-switch# configure terminal
-switch(config)# router bgp 65000
-switch(config-router)# neighbor tier-2 peer-group
-switch(config-router)# address-family ipv4 unicast
-switch(config-router-af)# neighbor tier-2 next-hop-self
-switch(config-router-af)# exit
-switch(config-router)# neighbor 10.0.0.2 peer-group tier-2
-switch(config-router)# neighbor 192.0.2.2 peer-group tier-2
-```
-
-{{< /tab >}}
-
-{{< /tabs >}}
-
-{{%notice note%}}
-
-BGP peer-group restrictions have been replaced with update-groups, which dynamically examine all peers and group them if they have the same outbound policy.
-
-{{%/notice%}}
-
-### BGP Advertisement
-
-As a best practice, limit the exchange of routing information at various parts in the network. The following image illustrates one way you can do so in a typical Clos architecture:
-
-{{< img src = "/images/cumulus-linux/bgp-advertisement-best-practices.png" >}}
-
-### Multiple Routing Tables and Forwarding
-
-You can run multiple routing tables (one for in-band/data plane traffic and one for out-of-band management plane traffic) on the same switch using {{<link url="Management-VRF" text="management VRF">}} (multiple routing tables and forwarding).
-
-{{%notice note%}}
-
-BGP and static routing (IPv4 and IPv6) are supported within a VRF context. For more information, refer to {{<link title="Virtual Routing and Forwarding - VRF">}}.
-
-{{%/notice%}}
+{{< /tabs >}}ß
 
 ### Converge Quickly On Link Failures
 
@@ -2087,8 +1910,6 @@ router bgp 65000
   neighbor 10.0.0.2 ttl-security hops 1
 ...
 ```
-
-### Protocol Tuning
 
 #### Converge Quickly On Soft Failures
 
@@ -2182,6 +2003,69 @@ router bgp 65000
   neighbor 10.0.0.2 timers connect 30
 ...
 ```
+
+### Peer Groups
+
+When a switch has many peers to connect to, the amount of redundant configuration becomes overwhelming. For example, repeating the `activate` and `next-hop-self` commands for even 60 neighbors makes for a very long configuration file. To address this problem, you can use
+`peer-group`.
+
+Instead of specifying properties of each individual peer, FRRouting allows you to define one or more peer groups and associate all the attributes common to that peer session to a peer group. A peer needs to be attached to a peer group only once, when it then inherits all address families activated for that peer group.
+
+After you attach a peer to a peer group, you need to associate an IP address with the peer group. The following example shows how to define and use peer groups:
+
+{{< tabs "34 ">}}
+
+{{< tab "NCLU Commands ">}}
+
+```
+cumulus@switch:~$ net add bgp neighbor tier-2 peer-group
+cumulus@switch:~$ net add bgp neighbor tier-2 next-hop-self
+cumulus@switch:~$ net add bgp neighbor 10.0.0.2 peer-group tier-2
+cumulus@switch:~$ net add bgp neighbor 192.0.2.2 peer-group tier-2
+```
+
+{{< /tab >}}
+
+{{< tab "vtysh Commands ">}}
+
+```
+cumulus@switch:~$ sudo vtysh
+
+switch# configure terminal
+switch(config)# router bgp 65000
+switch(config-router)# neighbor tier-2 peer-group
+switch(config-router)# address-family ipv4 unicast
+switch(config-router-af)# neighbor tier-2 next-hop-self
+switch(config-router-af)# exit
+switch(config-router)# neighbor 10.0.0.2 peer-group tier-2
+switch(config-router)# neighbor 192.0.2.2 peer-group tier-2
+```
+
+{{< /tab >}}
+
+{{< /tabs >}}
+
+{{%notice note%}}
+
+BGP peer-group restrictions have been replaced with update-groups, which dynamically examine all peers and group them if they have the same outbound policy.
+
+{{%/notice%}}
+
+### BGP Advertisement
+
+As a best practice, limit the exchange of routing information at various parts in the network. The following image illustrates one way you can do so in a typical Clos architecture:
+
+{{< img src = "/images/cumulus-linux/bgp-advertisement-best-practices.png" >}}
+
+### Multiple Routing Tables and Forwarding
+
+You can run multiple routing tables (one for in-band/data plane traffic and one for out-of-band management plane traffic) on the same switch using {{<link url="Management-VRF" text="management VRF">}} (multiple routing tables and forwarding).
+
+{{%notice note%}}
+
+BGP and static routing (IPv4 and IPv6) are supported within a VRF context. For more information, refer to {{<link title="Virtual Routing and Forwarding - VRF">}}.
+
+{{%/notice%}}
 
 #### Advertisement Interval
 
