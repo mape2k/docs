@@ -185,8 +185,7 @@ The following procedure provides example commands for two switches, leaf01 and s
 4. Specify which prefixes to originate:
 
     ```
-    cumulus@switch:~$ net add bgp ipv4 unicast network 10.10.10.1/32
-    cumulus@switch:~$ net add bgp ipv4 unicast network 10.1.10.0/24
+    cumulus@switch:~$ net add bgp ipv4 unicast network 10.10.10.101/32
     cumulus@switch:~$ net pending
     cumulus@switch:~$ net commit
 
@@ -264,8 +263,7 @@ The following procedure provides example commands for two switches, leaf01 and s
 
     ```
     switch(config-router)# address-family ipv4
-    switch(config-router-af)# network 10.10.10.1/32
-    switch(config-router-af)# network 10.1.10.0/24
+    switch(config-router-af)# network 10.10.10.101/32
     switch(config-router-af)# end
     switch# write memory
     switch# exit
@@ -310,8 +308,7 @@ router bgp 65199
  neighbor 10.10.10.1 remote-as external
  !
  address-family ipv4 unicast
-  network 10.10.10.1/32
-  network 10.1.10.0/24
+  network 10.10.10.101/32
  exit-address-family
 ...
 ```
@@ -377,8 +374,7 @@ cumulus@switch:~$ net commit
 cumulus@switch:~$ net add bgp autonomous-system 65199
 cumulus@switch:~$ net add bgp router-id 10.10.10.101
 cumulus@switch:~$ net add bgp neighbor swp1 remote-as external
-cumulus@switch:~$ net add bgp ipv4 unicast network 10.10.10.1/32
-cumulus@switch:~$ net add bgp ipv4 unicast network 10.1.10.0/24
+cumulus@switch:~$ net add bgp ipv4 unicast network 10.10.10.101/32
 cumulus@switch:~$ net pending
 cumulus@switch:~$ net commit
 ```
@@ -391,12 +387,16 @@ cumulus@switch:~$ net commit
 
 {{< tab "vtysh Commands ">}}
 
+{{< tabs "390 ">}}
+
+{{< tab "leaf01 ">}}
+
 ```
 cumulus@switch:~$ sudo vtysh
 
 switch# configure terminal
-switch(config)# router bgp 65199
-switch(config-router)# bgp router-id 10.10.10.101
+switch(config)# router bgp 65101
+switch(config-router)# bgp router-id 10.10.10.1
 switch(config-router)# neighbor swp1 remote-as external
 switch(config-router)# address-family ipv4
 switch(config-router-af)# network 10.10.10.1/32
@@ -406,6 +406,29 @@ switch# write memory
 switch# exit
 cumulus@switch:~$
 ```
+
+{{< /tab >}}
+
+{{< tab "spine01 ">}}
+
+```
+cumulus@switch:~$ sudo vtysh
+
+switch# configure terminal
+switch(config)# router bgp 65199
+switch(config-router)# bgp router-id 10.10.10.101
+switch(config-router)# neighbor swp1 remote-as external
+switch(config-router)# address-family ipv4
+switch(config-router-af)# network 10.10.10.101/32
+switch(config-router-af)# end
+switch# write memory
+switch# exit
+cumulus@switch:~$
+```
+
+{{< /tab >}}
+
+{{< /tabs >}}
 
 {{< /tab >}}
 
@@ -441,8 +464,7 @@ router bgp 65199
  neighbor swp1 remote-as external
  !
  address-family ipv4 unicast
-  network 10.10.10.1/32
-  network 10.1.10.0/24
+  network 10.10.10.101/32
  exit-address-family
 ...
 ```
