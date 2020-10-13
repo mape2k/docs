@@ -32,7 +32,7 @@
     <p style="padding-left: 27px; font-weight: 500; color: #36424a;">This page discusses:</p>
     <b>TOC: {{$.Page.Params.toc_depth}}</b>
     {{ if eq $.Page.Params.toc_depth 2 }}
-    <style>.TableOfContents ul ul ul ul { display: none; } !important</style>
+    <style>#TableOfContents ul ul ul ul { display: none !important; }</style>
     {{ end }}
     {{ .Page.TableOfContents }}
 
